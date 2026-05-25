@@ -383,13 +383,13 @@
 
 <!-- MODAL DETALLE CÉLULA -->
 <div class="modal-overlay" id="modal-detalle-celula">
-  <div class="modal" style="max-width:600px;max-height:85vh;overflow-y:auto">
+  <div class="modal" style="max-width:600px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
     <div class="modal-header">
       <h2 id="detalle-celula-titulo">Detalle</h2>
       <button class="modal-close" onclick="cerrarDetalleCelula()">✕</button>
     </div>
-    <div class="modal-body" id="detalle-celula-contenido"></div>
-    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+    <div class="modal-body" id="detalle-celula-contenido" style="overflow-y:auto;flex:1"></div>
+    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;flex-shrink:0">
       <button onclick="eliminarCelulaAdmin()" style="background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:8px;color:#e06c75;font-family:var(--font-title);font-size:0.8rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">🗑 ELIMINAR CÉLULA Y TODO SU CONTENIDO</button>
     </div>
   </div>

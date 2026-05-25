@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micelula-v1.3';
+const CACHE_NAME = 'micelula-v1.4';
 const urlsToCache = ['/'];
 
 self.addEventListener('install', event => {
