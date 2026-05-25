@@ -1,0 +1,5 @@
+# Backups manuales (reemplazados por git)
+versions/
+
+# Claude Code
+.claude/
