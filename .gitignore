@@ -3,3 +3,6 @@ versions/
 
 # Claude Code
 .claude/
+
+# Firebase
+.firebase/

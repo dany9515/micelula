@@ -1,0 +1,61 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuth() &&
+        get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.rol == 'admin';
+    }
+
+    function myEmail() {
+      return request.auth.token.email;
+    }
+
+    // Usuarios: cada uno lee/actualiza su propio doc; el admin lee y modifica todos.
+    // Un líder no puede cambiar su propio rol.
+    match /usuarios/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isAuth() && request.auth.uid == userId
+                       && request.resource.data.rol == resource.data.rol;
+      allow update, delete: if isAdmin();
+    }
+
+    // Células: el admin ve todas; los líderes solo ven las suyas.
+    match /celulas/{celulaId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
+      allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Miembros: accesibles solo por el líder de esa célula o el admin.
+    match /miembros/{miembroId} {
+      function celulaLiderEmail() {
+        return get(/databases/$(database)/documents/celulas/$(resource.data.celulaId)).data.liderEmail;
+      }
+      function nuevaCelulaLiderEmail() {
+        return get(/databases/$(database)/documents/celulas/$(request.resource.data.celulaId)).data.liderEmail;
+      }
+      allow read, update, delete: if isAuth() && (isAdmin() || celulaLiderEmail() == myEmail());
+      allow create: if isAuth() && (isAdmin() || nuevaCelulaLiderEmail() == myEmail());
+    }
+
+    // Reuniones: cada líder lee y crea las de su célula; solo el admin puede editar o borrar.
+    match /reuniones/{reunionId} {
+      allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
+      allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
+      allow update, delete: if isAdmin();
+    }
+
+    // Materiales: cualquier usuario autenticado puede leer; solo el admin puede escribir.
+    match /materiales/{materialId} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+    }
+  }
+}
