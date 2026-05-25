@@ -820,7 +820,13 @@ window.doCambioPassObligatorio = async function() {
     btn.disabled=false; btn.textContent='Guardar contraseña';
   }
 };
+document.getElementById('login-email').addEventListener('keydown', e => { if(e.key==='Enter') window.doLogin(); });
 document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') window.doLogin(); });
+document.getElementById('nueva-pass').addEventListener('keydown', e => { if(e.key==='Enter') window.doCambioPassObligatorio(); });
+document.getElementById('nueva-pass2').addEventListener('keydown', e => { if(e.key==='Enter') window.doCambioPassObligatorio(); });
+document.getElementById('pass-actual').addEventListener('keydown', e => { if(e.key==='Enter') window.cambiarPassword(); });
+document.getElementById('pass-nueva').addEventListener('keydown', e => { if(e.key==='Enter') window.cambiarPassword(); });
+document.getElementById('pass-repetir').addEventListener('keydown', e => { if(e.key==='Enter') window.cambiarPassword(); });
 
 window.doLogout = async function() {
   if(confirm('¿Estás seguro que querés cerrar sesión?')) {
