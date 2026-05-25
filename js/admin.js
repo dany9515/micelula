@@ -1,6 +1,9 @@
-import { db, collection, addDoc, getDocs, doc, query, where, orderBy, serverTimestamp } from './firebase.js';
+import { db, collection, addDoc, deleteDoc, getDocs, doc, query, where, orderBy, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
 import { showToast, formatFecha } from './ui.js';
+
+let _detalleCelulaId = null;
+let _detalleCelulaNombre = null;
 
 export async function cargarPanelAdmin() {
   if (!state.usuarioActual || state.usuarioActual.rol !== 'admin') return;
@@ -55,6 +58,8 @@ export async function cargarPanelAdmin() {
 }
 
 window.verDetalleCelula = async function(celulaId, nombreCelula) {
+  _detalleCelulaId = celulaId;
+  _detalleCelulaNombre = nombreCelula;
   const modal = document.getElementById('modal-detalle-celula');
   const titulo = document.getElementById('detalle-celula-titulo');
   const contenido = document.getElementById('detalle-celula-contenido');
@@ -83,8 +88,9 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
         <div class="section-body">
           ${reuniones.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin reuniones registradas</div>' :
             reuniones.map(r => `
-              <div class="item-card" style="margin-bottom:10px">
-                <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px">
+              <div class="item-card" style="margin-bottom:10px;position:relative">
+                <button onclick="eliminarReunionAdmin('${r.id}')" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
+                <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px;padding-right:40px">
                   📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + r.hora + 'hs' : ''}
                 </div>
                 ${r.lugar ? `<div class="item-info">📍 ${r.lugar}</div>` : ''}
@@ -105,6 +111,39 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
 
 window.cerrarDetalleCelula = function() {
   document.getElementById('modal-detalle-celula').classList.remove('show');
+};
+
+window.eliminarCelulaAdmin = async function() {
+  if (!_detalleCelulaId) return;
+  if (!confirm(`⚠️ Vas a eliminar "${_detalleCelulaNombre}" y TODOS sus miembros y reuniones. Esta acción no se puede deshacer. ¿Confirmás?`)) return;
+  try {
+    showToast('⏳ Eliminando célula...', false);
+    const miemSnap = await getDocs(query(collection(db, 'miembros'), where('celulaId', '==', _detalleCelulaId)));
+    await Promise.all(miemSnap.docs.map(d => deleteDoc(doc(db, 'miembros', d.id))));
+    const reuSnap = await getDocs(query(collection(db, 'reuniones'), where('celulaId', '==', _detalleCelulaId)));
+    await Promise.all(reuSnap.docs.map(d => deleteDoc(doc(db, 'reuniones', d.id))));
+    await deleteDoc(doc(db, 'celulas', _detalleCelulaId));
+    _detalleCelulaId = null;
+    _detalleCelulaNombre = null;
+    window.cerrarDetalleCelula();
+    showToast('✔ Célula eliminada', false);
+    cargarPanelAdmin();
+  } catch (e) {
+    showToast('❌ Error al eliminar', true);
+    console.error(e);
+  }
+};
+
+window.eliminarReunionAdmin = async function(reunionId) {
+  if (!confirm('¿Eliminás esta reunión? Esta acción no se puede deshacer.')) return;
+  try {
+    await deleteDoc(doc(db, 'reuniones', reunionId));
+    showToast('✔ Reunión eliminada', false);
+    await window.verDetalleCelula(_detalleCelulaId, _detalleCelulaNombre);
+  } catch (e) {
+    showToast('❌ Error al eliminar reunión', true);
+    console.error(e);
+  }
 };
 
 window.abrirNuevaCelula = function() {
