@@ -699,6 +699,8 @@ let miembrosCache = [];
 let unsubMiembros = null;
 let unsubReuniones = null;
 let unsubMateriales = null;
+let reunionesShown = 10;
+let materialesShown = 10;
 
 onAuthStateChanged(auth, async user => {
   document.getElementById('loading').classList.add('hidden');
@@ -1035,6 +1037,7 @@ let reunionesCache = [];
 function suscribirReuniones() {
   if (unsubReuniones) { unsubReuniones(); unsubReuniones = null; }
   reunionesCache = [];
+  reunionesShown = 10;
   if (!miCelulaId || miCelulaId === 'admin') return;
   const q = query(collection(db,'reuniones'), where('celulaId','==',miCelulaId));
   unsubReuniones = onSnapshot(q, snap => {
@@ -1087,7 +1090,9 @@ function renderHistorial() {
     cont.innerHTML = '<div class="empty-state"><div class="icon">📋</div><div>Aún no hay reuniones registradas.</div></div>';
     return;
   }
-  cont.innerHTML = reunionesCache.map(r => `
+  const visibles = reunionesCache.slice(0, reunionesShown);
+  const restantes = reunionesCache.length - reunionesShown;
+  cont.innerHTML = visibles.map(r => `
     <div class="item-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px">
         <div>
@@ -1102,8 +1107,13 @@ function renderHistorial() {
       ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info" style="margin-top:6px">✓ ${r.asistentesNombres.join(', ')}</div>` : ''}
       ${r.obs ? `<div class="item-info" style="margin-top:8px;font-style:italic;background:rgba(30,58,95,0.15);padding:8px 10px;border-radius:6px">"${r.obs}"</div>` : ''}
     </div>
-  `).join('');
+  `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasReuniones()" style="margin-top:4px">Ver ${restantes} reunión${restantes !== 1 ? 'es' : ''} anterior${restantes !== 1 ? 'es' : ''}</button>` : '');
 }
+
+window.verMasReuniones = function() {
+  reunionesShown += 10;
+  renderHistorial();
+};
 
 // MATERIALES
 let materialesCache = [];
@@ -1123,7 +1133,9 @@ function renderMateriales() {
     return;
   }
   const esAdmin = usuarioActual && usuarioActual.rol === 'admin';
-  cont.innerHTML = materialesCache.map(m => `
+  const visibles = materialesCache.slice(0, materialesShown);
+  const restantes = materialesCache.length - materialesShown;
+  cont.innerHTML = visibles.map(m => `
     <div class="material-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:6px">
         <div class="material-title">${m.titulo}</div>
@@ -1137,8 +1149,13 @@ function renderMateriales() {
         ${esAdmin ? `<button class="btn-delete" onclick="eliminarMaterial('${m.id}','${m.titulo.replace(/'/g,"\\'")}')">🗑️</button>` : ''}
       </div>
     </div>
-  `).join('');
+  `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasMateriales()" style="margin-top:4px">Ver ${restantes} material${restantes !== 1 ? 'es' : ''} más</button>` : '');
 }
+
+window.verMasMateriales = function() {
+  materialesShown += 10;
+  renderMateriales();
+};
 
 window.abrirSubirMaterial = function() {
   document.getElementById('modal-material-titulo').textContent = '⬆️ Subir Material';
