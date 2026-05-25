@@ -678,7 +678,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, getDocs, getDoc, setDoc, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, getDocs, getDoc, setDoc, serverTimestamp, Timestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBaVe16ISpOu_JduU1h6ZcZw2xdiwdc8J0",
@@ -696,6 +696,9 @@ const db = getFirestore(app);
 let usuarioActual = null;
 let miCelulaId = null;
 let miembrosCache = [];
+let unsubMiembros = null;
+let unsubReuniones = null;
+let unsubMateriales = null;
 
 onAuthStateChanged(auth, async user => {
   document.getElementById('loading').classList.add('hidden');
@@ -751,10 +754,9 @@ async function mostrarApp() {
     cargarPanelAdmin();
   }
   await cargarMiCelula();
-  await cargarMiembros();
-  await cargarReuniones();
-  await cargarMateriales();
-  actualizarStats();
+  suscribirMiembros();
+  suscribirReuniones();
+  suscribirMateriales();
   const now = new Date();
   document.getElementById('reu-fecha').value = now.toISOString().split('T')[0];
   document.getElementById('reu-hora').value = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -822,6 +824,9 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 
 window.doLogout = async function() {
   if(confirm('¿Estás seguro que querés cerrar sesión?')) {
+    if (unsubMiembros) { unsubMiembros(); unsubMiembros = null; }
+    if (unsubReuniones) { unsubReuniones(); unsubReuniones = null; }
+    if (unsubMateriales) { unsubMateriales(); unsubMateriales = null; }
     await signOut(auth);
     const btn = document.getElementById('login-btn');
     if(btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
@@ -912,12 +917,17 @@ function mostrarMensajeSinCelula() {
 }
 
 // MIEMBROS
-async function cargarMiembros() {
+function suscribirMiembros() {
+  if (unsubMiembros) { unsubMiembros(); unsubMiembros = null; }
   miembrosCache = [];
   if (!miCelulaId || miCelulaId === 'admin') return;
   const q = query(collection(db,'miembros'), where('celulaId','==',miCelulaId));
-  const snap = await getDocs(q);
-  miembrosCache = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+  unsubMiembros = onSnapshot(q, snap => {
+    miembrosCache = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+    renderMiembros();
+    renderAsistentes();
+    actualizarStats();
+  });
 }
 
 function renderMiembros() {
@@ -1003,9 +1013,6 @@ window.guardarMiembro = async function() {
       showToast('✔ Miembro agregado', false);
     }
     cerrarMiembro();
-    await cargarMiembros();
-    renderMiembros();
-    actualizarStats();
   } catch(e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
@@ -1014,20 +1021,21 @@ window.eliminarMiembro = async function(id, nombre) {
   try {
     await deleteDoc(doc(db,'miembros',id));
     showToast('✔ Miembro eliminado', false);
-    await cargarMiembros();
-    renderMiembros();
-    actualizarStats();
   } catch(e) { showToast('❌ Error al eliminar', true); }
 };
 
 // REUNIONES
 let reunionesCache = [];
-async function cargarReuniones() {
+function suscribirReuniones() {
+  if (unsubReuniones) { unsubReuniones(); unsubReuniones = null; }
   reunionesCache = [];
   if (!miCelulaId || miCelulaId === 'admin') return;
   const q = query(collection(db,'reuniones'), where('celulaId','==',miCelulaId));
-  const snap = await getDocs(q);
-  reunionesCache = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  unsubReuniones = onSnapshot(q, snap => {
+    reunionesCache = snap.docs.map(d => ({id:d.id, ...d.data()})).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+    renderHistorial();
+    actualizarStats();
+  });
 }
 
 window.guardarReunion = async function() {
@@ -1064,8 +1072,6 @@ window.guardarReunion = async function() {
     document.getElementById('reu-visitas').value = '';
     document.getElementById('reu-obs').value = '';
     document.querySelectorAll('.check-row.checked').forEach(r => r.classList.remove('checked'));
-    await cargarReuniones();
-    actualizarStats();
   } catch(e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
@@ -1095,10 +1101,13 @@ function renderHistorial() {
 
 // MATERIALES
 let materialesCache = [];
-async function cargarMateriales() {
+function suscribirMateriales() {
+  if (unsubMateriales) { unsubMateriales(); unsubMateriales = null; }
   const q = query(collection(db,'materiales'), orderBy('timestamp','desc'));
-  const snap = await getDocs(q);
-  materialesCache = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  unsubMateriales = onSnapshot(q, snap => {
+    materialesCache = snap.docs.map(d => ({id:d.id, ...d.data()}));
+    renderMateriales();
+  });
 }
 
 function renderMateriales() {
@@ -1169,8 +1178,6 @@ window.guardarMaterial = async function() {
       showToast('✔ Material publicado', false);
     }
     cerrarMaterial();
-    await cargarMateriales();
-    renderMateriales();
   } catch(e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
@@ -1179,8 +1186,6 @@ window.eliminarMaterial = async function(id, titulo) {
   try {
     await deleteDoc(doc(db,'materiales',id));
     showToast('✔ Material eliminado', false);
-    await cargarMateriales();
-    renderMateriales();
   } catch(e) { showToast('❌ Error al eliminar', true); }
 };
 
@@ -1295,14 +1300,11 @@ window.cerrarDetalleCelula = function() {
 };
 
 // CAMBIAR CÉLULA ACTIVA
-window.cambiarCelula = async function(id) {
+window.cambiarCelula = function(id) {
   miCelulaId = id;
   actualizarChipsCelula();
-  await cargarMiembros();
-  await cargarReuniones();
-  actualizarStats();
-  renderMiembros();
-  renderHistorial();
+  suscribirMiembros();
+  suscribirReuniones();
 };
 
 function actualizarChipsCelula() {
@@ -1351,9 +1353,8 @@ async function eliminarCelula(celulaId) {
       miCelulaId = misCelulas[0].id;
       actualizarSelectorCelulas();
       actualizarChipsCelula();
-      await cargarMiembros();
-      await cargarReuniones();
-      actualizarStats();
+      suscribirMiembros();
+      suscribirReuniones();
     } else {
       miCelulaId = null;
       document.getElementById('selector-celula-container').style.display = 'none';
@@ -1392,9 +1393,8 @@ window.guardarMiCelula = async function() {
     misCelulas.push({id: ref.id, nombre, liderEmail: usuarioActual.email, liderNombre: usuarioActual.nombre});
     miCelulaId = ref.id;
     actualizarSelectorCelulas();
-    await cargarMiembros();
-    await cargarReuniones();
-    actualizarStats();
+    suscribirMiembros();
+    suscribirReuniones();
     cerrarCrearMiCelula();
     showToast('✔ Célula creada exitosamente', false);
     // Sacar mensaje de sin célula si estaba
