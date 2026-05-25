@@ -112,9 +112,7 @@ async function eliminarCelula(celulaId) {
 }
 
 window.abrirCrearMiCelula = function() {
-  document.getElementById('cel-nombre').value = '';
-  document.getElementById('cel-email').value = state.usuarioActual.email;
-  document.getElementById('cel-lider').value = state.usuarioActual.nombre;
+  document.getElementById('mi-cel-nombre').value = '';
   document.getElementById('modal-celula-lider').classList.add('show');
 };
 
@@ -125,25 +123,27 @@ window.cerrarCrearMiCelula = function() {
 window.guardarMiCelula = async function() {
   const nombre = document.getElementById('mi-cel-nombre').value.trim();
   if (!nombre) { showToast('Ingresá un nombre para la célula', true); return; }
+  let ref;
   try {
-    const ref = await addDoc(collection(db, 'celulas'), {
+    ref = await addDoc(collection(db, 'celulas'), {
       nombre,
       liderEmail: state.usuarioActual.email,
       liderNombre: state.usuarioActual.nombre,
       creadaEn: serverTimestamp(),
       activa: true
     });
-    state.misCelulas.push({ id: ref.id, nombre, liderEmail: state.usuarioActual.email, liderNombre: state.usuarioActual.nombre });
-    state.miCelulaId = ref.id;
-    actualizarSelectorCelulas();
-    suscribirMiembros();
-    suscribirReuniones();
-    window.cerrarCrearMiCelula();
-    showToast('✔ Célula creada exitosamente', false);
-    const msg = document.getElementById('msg-sin-celula');
-    if (msg) msg.remove();
   } catch (e) {
     showToast('❌ Error al crear la célula', true);
     console.error(e);
+    return;
   }
+  state.misCelulas.push({ id: ref.id, nombre, liderEmail: state.usuarioActual.email, liderNombre: state.usuarioActual.nombre });
+  state.miCelulaId = ref.id;
+  actualizarSelectorCelulas();
+  suscribirMiembros();
+  suscribirReuniones();
+  window.cerrarCrearMiCelula();
+  showToast('✔ Célula creada exitosamente', false);
+  const msg = document.getElementById('msg-sin-celula');
+  if (msg) msg.remove();
 };

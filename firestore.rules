@@ -30,7 +30,7 @@ service cloud.firestore {
       allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
       allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
       allow update: if isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
     }
 
     // Miembros: accesibles solo por el líder de esa célula o el admin.
@@ -45,11 +45,12 @@ service cloud.firestore {
       allow create: if isAuth() && (isAdmin() || nuevaCelulaLiderEmail() == myEmail());
     }
 
-    // Reuniones: cada líder lee y crea las de su célula; solo el admin puede editar o borrar.
+    // Reuniones: cada líder lee y crea las de su célula; solo el admin puede editar; líder puede borrar las suyas.
     match /reuniones/{reunionId} {
       allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
       allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
-      allow update, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
     }
 
     // Materiales: cualquier usuario autenticado puede leer; solo el admin puede escribir.
