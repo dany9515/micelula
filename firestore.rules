@@ -45,12 +45,15 @@ service cloud.firestore {
       allow create: if isAuth() && (isAdmin() || nuevaCelulaLiderEmail() == myEmail());
     }
 
-    // Reuniones: cada líder lee y crea las de su célula; solo el admin puede editar; líder puede borrar las suyas.
+    // Reuniones: cada líder accede a las de su célula (vía get); solo el admin puede editar; líder puede borrar las suyas.
     match /reuniones/{reunionId} {
-      allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
+      function reunionCelulaLiderEmail() {
+        return get(/databases/$(database)/documents/celulas/$(resource.data.celulaId)).data.liderEmail;
+      }
+      allow read: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
       allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
       allow update: if isAdmin();
-      allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
+      allow delete: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
     }
 
     // Materiales: cualquier usuario autenticado puede leer; solo el admin puede escribir.
