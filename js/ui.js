@@ -10,13 +10,15 @@ export function showToast(msg, isError = false) {
 
 export function formatFecha(f) {
   if (!f) return '—';
+  const parts = String(f).split('T')[0].split('-');
+  if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
   const d = new Date(f);
-  return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }
 
 export function actualizarStats() {
   if (!state.usuarioActual) return;
-  if (state.usuarioActual.rol === 'admin') {
+  if (state.usuarioActual.rol === 'admin' || !state.miCelulaId) {
     document.getElementById('stat-miembros').textContent = '—';
     document.getElementById('stat-reuniones').textContent = '—';
     return;

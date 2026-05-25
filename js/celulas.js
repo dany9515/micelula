@@ -1,6 +1,6 @@
 import { db, collection, addDoc, deleteDoc, doc, query, where, getDocs, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast } from './ui.js';
+import { showToast, actualizarStats } from './ui.js';
 import { suscribirMiembros } from './miembros.js';
 import { suscribirReuniones } from './reuniones.js';
 
@@ -55,6 +55,7 @@ export function actualizarChipsCelula() {
 }
 
 function mostrarMensajeSinCelula() {
+  if (document.getElementById('msg-sin-celula')) return;
   const bienvenida = document.querySelector('.welcome-card');
   if (bienvenida) {
     bienvenida.insertAdjacentHTML('afterend', `
@@ -102,6 +103,9 @@ async function eliminarCelula(celulaId) {
     } else {
       state.miCelulaId = null;
       document.getElementById('selector-celula-container').style.display = 'none';
+      suscribirMiembros();
+      suscribirReuniones();
+      actualizarStats();
       mostrarMensajeSinCelula();
     }
     showToast('✔ Célula eliminada', false);

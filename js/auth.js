@@ -43,7 +43,7 @@ window.doLogout = async function() {
     if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
     document.getElementById('login-email').value = '';
     document.getElementById('login-pass').value = '';
-    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('login-error-box').innerHTML = '';
   }
 };
 
