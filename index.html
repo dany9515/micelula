@@ -399,16 +399,13 @@
 <!-- SERVICE WORKER -->
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').then(reg => {
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            // Nueva versión disponible — recargar automáticamente
-            window.location.reload();
-          }
-        });
-      });
+    navigator.serviceWorker.register('/sw.js');
+    // Recargar automáticamente cuando un nuevo SW toma control
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
   }
 </script>
