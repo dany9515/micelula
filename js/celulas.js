@@ -31,7 +31,7 @@ export function actualizarSelectorCelulas() {
   const sel = document.getElementById('selector-celula');
   sel.innerHTML = state.misCelulas.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
   sel.value = state.miCelulaId;
-  sel.style.display = state.misCelulas.length > 1 ? 'block' : 'none';
+  sel.style.display = 'block';
 }
 
 export function actualizarChipsCelula() {
