@@ -35,7 +35,7 @@ export function actualizarSelectorCelulas() {
 }
 
 export function actualizarChipsCelula() {
-  if (state.usuarioActual.rol === 'admin' || !state.miCelulaId || state.misCelulas.length <= 1) {
+  if (state.usuarioActual.rol === 'admin' || !state.miCelulaId) {
     ['reunion', 'miembros', 'historial'].forEach(p => {
       const chip = document.getElementById('chip-celula-' + p);
       if (chip) chip.style.display = 'none';
@@ -144,6 +144,7 @@ window.guardarMiCelula = async function() {
   state.misCelulas.push({ id: ref.id, nombre, liderEmail: state.usuarioActual.email, liderNombre: state.usuarioActual.nombre });
   state.miCelulaId = ref.id;
   actualizarSelectorCelulas();
+  actualizarChipsCelula();
   suscribirMiembros();
   suscribirReuniones();
   window.cerrarCrearMiCelula();

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'micelula-v1.5';
+const CACHE_NAME = 'micelula-v1.6';
 
 // Solo assets verdaderamente estáticos — NUNCA el index.html
 const STATIC_ASSETS = [

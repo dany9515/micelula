@@ -209,7 +209,7 @@
 
     <!-- REUNIÓN -->
     <div class="panel" id="panel-reunion">
-      <div id="chip-celula-reunion" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px;display:inline-block">📍 <span id="chip-celula-reunion-nombre"></span></div>
+      <div id="chip-celula-reunion" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px">📍 <span id="chip-celula-reunion-nombre"></span></div>
       <div class="section">
         <div class="section-header"><h3>📋 Registrar Reunión</h3></div>
         <div class="section-body">
@@ -235,7 +235,7 @@
 
     <!-- MIEMBROS -->
     <div class="panel" id="panel-miembros">
-      <div id="chip-celula-miembros" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px;display:inline-block">📍 <span id="chip-celula-miembros-nombre"></span></div>
+      <div id="chip-celula-miembros" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px">📍 <span id="chip-celula-miembros-nombre"></span></div>
       <div class="section">
         <div class="section-header"><h3>👥 Miembros de Mi Célula</h3></div>
         <div class="section-body">
@@ -247,7 +247,7 @@
 
     <!-- HISTORIAL -->
     <div class="panel" id="panel-historial">
-      <div id="chip-celula-historial" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px;display:inline-block">📍 <span id="chip-celula-historial-nombre"></span></div>
+      <div id="chip-celula-historial" style="display:none;margin-bottom:12px;font-family:var(--font-mono);font-size:0.78rem;color:var(--gold-light);background:rgba(212,164,74,0.08);border:0.5px solid var(--gold-dark);padding:6px 12px;border-radius:20px">📍 <span id="chip-celula-historial-nombre"></span></div>
       <div class="section">
         <div class="section-header"><h3>📊 Historial de Reuniones</h3></div>
         <div class="section-body">
@@ -386,12 +386,12 @@
   <div class="modal" style="max-width:600px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
     <div class="modal-header">
       <h2 id="detalle-celula-titulo">Detalle</h2>
-      <button class="modal-close" onclick="cerrarDetalleCelula()">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="eliminarCelulaAdmin()" title="Eliminar célula" style="background:rgba(220,53,69,0.15);border:1px solid rgba(220,53,69,0.5);border-radius:8px;color:#e06c75;font-size:0.85rem;padding:6px 12px;cursor:pointer;">🗑 Eliminar</button>
+        <button class="modal-close" onclick="cerrarDetalleCelula()">✕</button>
+      </div>
     </div>
-    <div class="modal-body" id="detalle-celula-contenido" style="overflow-y:auto;flex:1"></div>
-    <div style="padding:16px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;flex-shrink:0">
-      <button onclick="eliminarCelulaAdmin()" style="background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:8px;color:#e06c75;font-family:var(--font-title);font-size:0.8rem;padding:8px 16px;cursor:pointer;letter-spacing:1px;">🗑 ELIMINAR CÉLULA Y TODO SU CONTENIDO</button>
-    </div>
+    <div class="modal-body" id="detalle-celula-contenido" style="overflow-y:auto;flex:1;max-height:none"></div>
   </div>
 </div>
 
