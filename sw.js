@@ -1,44 +1,13 @@
-const CACHE_NAME = 'micelula-v1.6';
-
-// Solo assets verdaderamente estáticos — NUNCA el index.html
-const STATIC_ASSETS = [
-  '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-];
-
-self.addEventListener('install', event => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache =>
-      Promise.allSettled(STATIC_ASSETS.map(url => cache.add(url)))
-    )
-  );
-});
+// Este SW se auto-destruye: limpia todos los caches y se desregistra.
+// Fue creado para eliminar versiones anteriores del SW que cacheaban archivos JS.
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  // index.html y rutas de navegación: siempre desde la red, sin caché
-  if (event.request.mode === 'navigate' ||
-      url.pathname === '/' ||
-      url.pathname.endsWith('.html')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // Assets estáticos: caché primero, red como fallback
-  event.respondWith(
-    caches.match(event.request).then(cached =>
-      cached || fetch(event.request)
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => self.registration.unregister())
+      .then(() => self.clients.matchAll({ type: 'window' }))
+      .then(clients => clients.forEach(c => c.navigate(c.url)))
   );
 });
