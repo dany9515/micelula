@@ -1,6 +1,6 @@
 import { auth, db, signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, doc, updateDoc } from './firebase.js';
 import { state } from './state.js';
-import { showToast } from './ui.js';
+import { showToast, confirmar } from './ui.js';
 
 export function initAuth(onAuthSuccess) {
   window._onAuthSuccess = onAuthSuccess;
@@ -34,7 +34,7 @@ window.doLogin = async function() {
 };
 
 window.doLogout = async function() {
-  if (confirm('¿Estás seguro que querés cerrar sesión?')) {
+  if (await confirmar('Cerrar sesión', '¿Estás seguro que querés cerrar sesión?', 'Salir')) {
     if (state.unsubMiembros) { state.unsubMiembros(); state.unsubMiembros = null; }
     if (state.unsubReuniones) { state.unsubReuniones(); state.unsubReuniones = null; }
     if (state.unsubMateriales) { state.unsubMateriales(); state.unsubMateriales = null; }

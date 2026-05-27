@@ -1,6 +1,6 @@
 import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, actualizarStats } from './ui.js';
+import { showToast, formatFecha, actualizarStats, confirmar, escHtml } from './ui.js';
 
 export function suscribirMiembros() {
   if (state.unsubMiembros) { state.unsubMiembros(); state.unsubMiembros = null; }
@@ -25,15 +25,15 @@ export function renderMiembros() {
     <div class="item-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
-          <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${m.nombre}</div>
-          ${m.telefono ? `<div class="item-info">📱 ${m.telefono}</div>` : ''}
+          <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(m.nombre)}</div>
+          ${m.telefono ? `<div class="item-info">📱 ${escHtml(m.telefono)}</div>` : ''}
           ${m.edad ? `<div class="item-info">🎂 ${m.edad} años</div>` : ''}
           ${m.ingreso ? `<div class="item-info">📅 Ingreso: ${formatFecha(m.ingreso)}</div>` : ''}
-          ${m.obs ? `<div class="item-info" style="margin-top:6px;font-style:italic">"${m.obs}"</div>` : ''}
+          ${m.obs ? `<div class="item-info" style="margin-top:6px;font-style:italic">"${escHtml(m.obs)}"</div>` : ''}
         </div>
         <div style="display:flex;gap:6px">
           <button class="btn-danger" onclick="editarMiembro('${m.id}')" style="border-color:var(--gold);color:var(--gold)">✏️</button>
-          <button class="btn-danger" onclick="eliminarMiembro('${m.id}','${m.nombre.replace(/'/g, "\\'")}')">🗑️</button>
+          <button class="btn-danger" data-id="${m.id}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
         </div>
       </div>
     </div>
@@ -48,7 +48,7 @@ export function renderAsistentes() {
   }
   cont.innerHTML = state.miembrosCache.map(m => `
     <div class="check-row" data-id="${m.id}" onclick="this.classList.toggle('checked')">
-      <div class="check-name">${m.nombre}</div>
+      <div class="check-name">${escHtml(m.nombre)}</div>
       <div class="check-box">✓</div>
     </div>
   `).join('');
@@ -104,8 +104,12 @@ window.guardarMiembro = async function() {
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
+window.eliminarMiembroBtn = function(btn) {
+  window.eliminarMiembro(btn.dataset.id, btn.dataset.nombre);
+};
+
 window.eliminarMiembro = async function(id, nombre) {
-  if (!confirm(`¿Eliminar a ${nombre}?`)) return;
+  if (!await confirmar('Eliminar miembro', `¿Eliminás a ${nombre}?`, '🗑 Eliminar', true)) return;
   try {
     await deleteDoc(doc(db, 'miembros', id));
     showToast('✔ Miembro eliminado', false);

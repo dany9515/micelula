@@ -398,6 +398,21 @@
   </div>
 </div>
 
+<!-- MODAL CONFIRMACIÓN -->
+<div class="modal-overlay" id="modal-confirm">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2 id="confirm-titulo">Confirmar</h2>
+      <button class="modal-close" onclick="cerrarConfirm(false)">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-msg" style="font-family:var(--font-body);color:var(--text);line-height:1.6;margin-bottom:16px"></p>
+      <button id="confirm-ok" class="btn-primary" onclick="cerrarConfirm(true)">✔ Confirmar</button>
+      <button class="btn-secondary" onclick="cerrarConfirm(false)">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

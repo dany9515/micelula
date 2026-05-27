@@ -1,6 +1,6 @@
 import { db, collection, addDoc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, actualizarStats } from './ui.js';
+import { showToast, formatFecha, actualizarStats, escHtml } from './ui.js';
 
 export function suscribirReuniones() {
   if (state.unsubReuniones) { state.unsubReuniones(); state.unsubReuniones = null; }
@@ -27,16 +27,16 @@ export function renderHistorial() {
     <div class="item-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:10px">
         <div>
-          <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700">📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + r.hora + 'hs' : ''}</div>
-          ${r.lugar ? `<div class="item-info" style="margin-top:4px">📍 ${r.lugar}</div>` : ''}
+          <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700">📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + escHtml(r.hora) + 'hs' : ''}</div>
+          ${r.lugar ? `<div class="item-info" style="margin-top:4px">📍 ${escHtml(r.lugar)}</div>` : ''}
         </div>
         <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
       </div>
-      ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${r.tema}</div>` : ''}
+      ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
       ${r.ofrenda > 0 ? `<div class="item-info">💰 Ofrenda: $${r.ofrenda.toLocaleString('es-AR')}</div>` : ''}
-      ${r.visitas ? `<div class="item-info">👋 Visitas: ${r.visitas}</div>` : ''}
-      ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info" style="margin-top:6px">✓ ${r.asistentesNombres.join(', ')}</div>` : ''}
-      ${r.obs ? `<div class="item-info" style="margin-top:8px;font-style:italic;background:rgba(30,58,95,0.15);padding:8px 10px;border-radius:6px">"${r.obs}"</div>` : ''}
+      ${r.visitas ? `<div class="item-info">👋 Visitas: ${escHtml(r.visitas)}</div>` : ''}
+      ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info" style="margin-top:6px">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
+      ${r.obs ? `<div class="item-info" style="margin-top:8px;font-style:italic;background:rgba(30,58,95,0.15);padding:8px 10px;border-radius:6px">"${escHtml(r.obs)}"</div>` : ''}
     </div>
   `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasReuniones()" style="margin-top:4px">Ver ${restantes} reunión${restantes !== 1 ? 'es' : ''} anterior${restantes !== 1 ? 'es' : ''}</button>` : '');
 }

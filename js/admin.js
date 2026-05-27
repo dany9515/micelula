@@ -1,6 +1,6 @@
 import { db, collection, addDoc, deleteDoc, getDocs, doc, query, where, orderBy, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha } from './ui.js';
+import { showToast, formatFecha, confirmar, escHtml } from './ui.js';
 
 let _detalleCelulaId = null;
 let _detalleCelulaNombre = null;
@@ -45,12 +45,12 @@ export async function cargarPanelAdmin() {
       <div class="item-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
-            <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${c.nombre}</div>
-            <div class="item-info">👤 Líder: ${c.liderNombre || c.liderEmail}</div>
-            <div class="item-info">✉️ ${c.liderEmail}</div>
+            <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(c.nombre)}</div>
+            <div class="item-info">👤 Líder: ${escHtml(c.liderNombre || c.liderEmail)}</div>
+            <div class="item-info">✉️ ${escHtml(c.liderEmail)}</div>
             <div class="item-info">👥 ${miemPorCel[c.id] || 0} miembros</div>
           </div>
-          <button onclick="verDetalleCelula('${c.id}','${c.nombre.replace(/'/g, "\\'")}');" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
+          <button onclick="verDetalleCelula('${c.id}','${escHtml(c.nombre)}');" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
         </div>
       </div>
     `).join('');
@@ -78,8 +78,8 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
           ${miembros.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin miembros registrados</div>' :
             miembros.map(m => `
               <div style="padding:8px 0;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-                <span style="color:var(--text)">${m.nombre}</span>
-                ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${m.telefono}</span>` : ''}
+                <span style="color:var(--text)">${escHtml(m.nombre)}</span>
+                ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
               </div>`).join('')}
         </div>
       </div>
@@ -91,15 +91,15 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
               <div class="item-card" style="margin-bottom:10px;position:relative">
                 <button onclick="eliminarReunionAdmin('${r.id}')" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
                 <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px;padding-right:40px">
-                  📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + r.hora + 'hs' : ''}
+                  📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + escHtml(r.hora) + 'hs' : ''}
                 </div>
-                ${r.lugar ? `<div class="item-info">📍 ${r.lugar}</div>` : ''}
-                ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin:6px 0"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${r.tema}</div>` : ''}
+                ${r.lugar ? `<div class="item-info">📍 ${escHtml(r.lugar)}</div>` : ''}
+                ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin:6px 0"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
                 <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes</div>
-                ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info">✓ ${r.asistentesNombres.join(', ')}</div>` : ''}
-                ${r.visitas ? `<div class="item-info">👋 Visitas: ${r.visitas}</div>` : ''}
+                ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
+                ${r.visitas ? `<div class="item-info">👋 Visitas: ${escHtml(r.visitas)}</div>` : ''}
                 ${r.ofrenda > 0 ? `<div class="item-info">💰 Ofrenda: $${r.ofrenda.toLocaleString('es-AR')}</div>` : ''}
-                ${r.obs ? `<div class="item-info" style="font-style:italic">"${r.obs}"</div>` : ''}
+                ${r.obs ? `<div class="item-info" style="font-style:italic">"${escHtml(r.obs)}"</div>` : ''}
               </div>`).join('')}
         </div>
       </div>`;
@@ -115,7 +115,7 @@ window.cerrarDetalleCelula = function() {
 
 window.eliminarCelulaAdmin = async function() {
   if (!_detalleCelulaId) return;
-  if (!confirm(`⚠️ Vas a eliminar "${_detalleCelulaNombre}" y TODOS sus miembros y reuniones. Esta acción no se puede deshacer. ¿Confirmás?`)) return;
+  if (!await confirmar('Eliminar célula', `Vas a eliminar "${_detalleCelulaNombre}" y TODOS sus miembros y reuniones. Esta acción no se puede deshacer.`, '🗑 Eliminar', true)) return;
   try {
     showToast('⏳ Eliminando célula...', false);
     const miemSnap = await getDocs(query(collection(db, 'miembros'), where('celulaId', '==', _detalleCelulaId)));
@@ -135,7 +135,7 @@ window.eliminarCelulaAdmin = async function() {
 };
 
 window.eliminarReunionAdmin = async function(reunionId) {
-  if (!confirm('¿Eliminás esta reunión? Esta acción no se puede deshacer.')) return;
+  if (!await confirmar('Eliminar reunión', '¿Eliminás esta reunión? Esta acción no se puede deshacer.', '🗑 Eliminar', true)) return;
   try {
     await deleteDoc(doc(db, 'reuniones', reunionId));
     showToast('✔ Reunión eliminada', false);

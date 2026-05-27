@@ -1,6 +1,6 @@
 import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha } from './ui.js';
+import { showToast, formatFecha, confirmar, escHtml } from './ui.js';
 
 export function suscribirMateriales() {
   if (state.unsubMateriales) { state.unsubMateriales(); state.unsubMateriales = null; }
@@ -23,15 +23,15 @@ export function renderMateriales() {
   cont.innerHTML = visibles.map(m => `
     <div class="material-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-        <div class="material-title">${m.titulo}</div>
-        <div class="cat-tag">${m.categoria}</div>
+        <div class="material-title">${escHtml(m.titulo)}</div>
+        <div class="cat-tag">${escHtml(m.categoria)}</div>
       </div>
-      <div class="material-meta">📅 ${formatFecha(m.fecha)} · 👤 ${m.subidoPor || 'Admin'}</div>
-      ${m.descripcion ? `<div class="material-desc">${m.descripcion}</div>` : ''}
+      <div class="material-meta">📅 ${formatFecha(m.fecha)} · 👤 ${escHtml(m.subidoPor || 'Admin')}</div>
+      ${m.descripcion ? `<div class="material-desc">${escHtml(m.descripcion)}</div>` : ''}
       <div class="material-actions">
-        <a href="${m.url}" target="_blank" rel="noopener" class="btn-download">📥 Descargar</a>
+        <a href="${escHtml(m.url)}" target="_blank" rel="noopener" class="btn-download">📥 Descargar</a>
         ${esAdmin ? `<button class="btn-edit" onclick="editarMaterial('${m.id}')">✏️</button>` : ''}
-        ${esAdmin ? `<button class="btn-delete" onclick="eliminarMaterial('${m.id}','${m.titulo.replace(/'/g, "\\'")}')">🗑️</button>` : ''}
+        ${esAdmin ? `<button class="btn-delete" data-id="${m.id}" data-titulo="${escHtml(m.titulo)}" onclick="eliminarMaterialBtn(this)">🗑️</button>` : ''}
       </div>
     </div>
   `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasMateriales()" style="margin-top:4px">Ver ${restantes} material${restantes !== 1 ? 'es' : ''} más</button>` : '');
@@ -87,8 +87,12 @@ window.guardarMaterial = async function() {
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
+window.eliminarMaterialBtn = function(btn) {
+  window.eliminarMaterial(btn.dataset.id, btn.dataset.titulo);
+};
+
 window.eliminarMaterial = async function(id, titulo) {
-  if (!confirm(`¿Eliminar "${titulo}"?`)) return;
+  if (!await confirmar('Eliminar material', `¿Eliminás "${titulo}"?`, '🗑 Eliminar', true)) return;
   try {
     await deleteDoc(doc(db, 'materiales', id));
     showToast('✔ Material eliminado', false);

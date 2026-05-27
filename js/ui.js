@@ -1,5 +1,27 @@
 import { state } from './state.js';
 
+export function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+let _confirmResolve = null;
+
+export function confirmar(titulo, mensaje, btnTexto = '✔ Confirmar', isDanger = false) {
+  document.getElementById('confirm-titulo').textContent = titulo;
+  document.getElementById('confirm-msg').textContent = mensaje;
+  const okBtn = document.getElementById('confirm-ok');
+  okBtn.textContent = btnTexto;
+  okBtn.style.background = isDanger ? 'linear-gradient(135deg,#c0392b,#922b21)' : '';
+  okBtn.style.color = isDanger ? '#fff' : '';
+  document.getElementById('modal-confirm').classList.add('show');
+  return new Promise(resolve => { _confirmResolve = resolve; });
+}
+
+window.cerrarConfirm = function(resultado) {
+  document.getElementById('modal-confirm').classList.remove('show');
+  if (_confirmResolve) { _confirmResolve(resultado); _confirmResolve = null; }
+};
+
 export function showToast(msg, isError = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;

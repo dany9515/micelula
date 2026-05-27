@@ -1,6 +1,6 @@
 import { db, collection, addDoc, deleteDoc, doc, query, where, getDocs, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, actualizarStats } from './ui.js';
+import { showToast, actualizarStats, confirmar, escHtml } from './ui.js';
 import { suscribirMiembros } from './miembros.js';
 import { suscribirReuniones } from './reuniones.js';
 
@@ -29,7 +29,7 @@ export function actualizarSelectorCelulas() {
   if (state.misCelulas.length === 0) { selector.style.display = 'none'; return; }
   selector.style.display = 'block';
   const sel = document.getElementById('selector-celula');
-  sel.innerHTML = state.misCelulas.map(c => `<option value="${c.id}">${c.nombre}</option>`).join('');
+  sel.innerHTML = state.misCelulas.map(c => `<option value="${c.id}">${escHtml(c.nombre)}</option>`).join('');
   sel.value = state.miCelulaId;
   sel.style.display = 'block';
 }
@@ -77,10 +77,10 @@ window.cambiarCelula = function(id) {
   suscribirReuniones();
 };
 
-window.confirmarEliminarCelula = function() {
+window.confirmarEliminarCelula = async function() {
   const celula = state.misCelulas.find(c => c.id === state.miCelulaId);
   if (!celula) return;
-  if (confirm(`⚠️ Vas a eliminar "${celula.nombre}" y todos sus miembros y reuniones. Esta acción no se puede deshacer. ¿Confirmás?`)) {
+  if (await confirmar('Eliminar célula', `Vas a eliminar "${celula.nombre}" y todos sus miembros y reuniones. Esta acción no se puede deshacer.`, '🗑 Eliminar', true)) {
     eliminarCelula(state.miCelulaId);
   }
 };
