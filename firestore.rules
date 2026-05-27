@@ -52,7 +52,7 @@ service cloud.firestore {
       }
       allow read: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
       allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
-      allow update: if isAdmin();
+      allow update: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
       allow delete: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
     }
 

@@ -1,4 +1,4 @@
-import { db, collection, addDoc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
+import { db, collection, addDoc, updateDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
 import { showToast, formatFecha, actualizarStats, escHtml } from './ui.js';
 
@@ -30,7 +30,10 @@ export function renderHistorial() {
           <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700">📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + escHtml(r.hora) + 'hs' : ''}</div>
           ${r.lugar ? `<div class="item-info" style="margin-top:4px">📍 ${escHtml(r.lugar)}</div>` : ''}
         </div>
-        <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
+          <button class="btn-danger" onclick="editarReunion('${r.id}')" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
+        </div>
       </div>
       ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
       ${r.ofrenda > 0 ? `<div class="item-info">💰 Ofrenda: $${r.ofrenda.toLocaleString('es-AR')}</div>` : ''}
@@ -75,6 +78,65 @@ window.guardarReunion = async function() {
     document.getElementById('reu-visitas').value = '';
     document.getElementById('reu-obs').value = '';
     document.querySelectorAll('.check-row.checked').forEach(r => r.classList.remove('checked'));
+  } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
+};
+
+window.editarReunion = function(id) {
+  const r = state.reunionesCache.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modal-editar-reunion').dataset.editId = id;
+  document.getElementById('edit-reu-fecha').value = r.fecha || '';
+  document.getElementById('edit-reu-hora').value = r.hora || '';
+  document.getElementById('edit-reu-lugar').value = r.lugar || '';
+  document.getElementById('edit-reu-tema').value = r.tema || '';
+  document.getElementById('edit-reu-ofrenda').value = r.ofrenda || '';
+  document.getElementById('edit-reu-visitas').value = r.visitas || '';
+  document.getElementById('edit-reu-obs').value = r.obs || '';
+  const cont = document.getElementById('edit-asistentes-list');
+  if (state.miembrosCache.length === 0) {
+    cont.innerHTML = '<div style="color:var(--muted);font-style:italic">Sin miembros en esta célula</div>';
+  } else {
+    cont.innerHTML = state.miembrosCache.map(m => `
+      <div class="check-row ${r.asistentesIds && r.asistentesIds.includes(m.id) ? 'checked' : ''}" data-id="${m.id}" onclick="this.classList.toggle('checked')">
+        <div class="check-name">${escHtml(m.nombre)}</div>
+        <div class="check-box">✓</div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('modal-editar-reunion').classList.add('show');
+};
+
+window.cerrarEditarReunion = function() {
+  document.getElementById('modal-editar-reunion').classList.remove('show');
+};
+
+window.guardarEdicionReunion = async function() {
+  const modal = document.getElementById('modal-editar-reunion');
+  const id = modal.dataset.editId;
+  if (!id) return;
+  const fecha = document.getElementById('edit-reu-fecha').value;
+  if (!fecha) { showToast('Falta la fecha', true); return; }
+  const asistentesIds = [];
+  modal.querySelectorAll('.check-row.checked').forEach(r => asistentesIds.push(r.dataset.id));
+  const asistentesNombres = asistentesIds.map(aid => {
+    const m = state.miembrosCache.find(x => x.id === aid);
+    return m ? m.nombre : '';
+  }).filter(Boolean);
+  try {
+    await updateDoc(doc(db, 'reuniones', id), {
+      fecha,
+      hora: document.getElementById('edit-reu-hora').value,
+      lugar: document.getElementById('edit-reu-lugar').value.trim(),
+      tema: document.getElementById('edit-reu-tema').value.trim(),
+      ofrenda: parseFloat(document.getElementById('edit-reu-ofrenda').value) || 0,
+      visitas: document.getElementById('edit-reu-visitas').value.trim(),
+      obs: document.getElementById('edit-reu-obs').value.trim(),
+      asistentesIds,
+      asistentesNombres,
+      cantAsistentes: asistentesIds.length,
+    });
+    showToast('✔ Reunión actualizada', false);
+    window.cerrarEditarReunion();
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
 };
 
