@@ -1,6 +1,6 @@
-import { db, collection, addDoc, updateDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
+import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, actualizarStats, escHtml } from './ui.js';
+import { showToast, formatFecha, actualizarStats, escHtml, confirmar } from './ui.js';
 
 export function suscribirReuniones() {
   if (state.unsubReuniones) { state.unsubReuniones(); state.unsubReuniones = null; }
@@ -33,6 +33,7 @@ export function renderHistorial() {
         <div style="display:flex;align-items:center;gap:6px">
           <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
           <button class="btn-danger" onclick="editarReunion('${r.id}')" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
+          <button class="btn-danger" onclick="eliminarReunion('${r.id}')" style="padding:4px 10px">🗑️</button>
         </div>
       </div>
       ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
@@ -45,6 +46,7 @@ export function renderHistorial() {
 }
 
 window.guardarReunion = async function() {
+  if (!state.miCelulaId || state.miCelulaId === 'admin') { showToast('Error: no hay célula activa', true); return; }
   const fecha = document.getElementById('reu-fecha').value;
   const hora = document.getElementById('reu-hora').value;
   if (!fecha) { showToast('Falta la fecha', true); return; }
@@ -138,6 +140,14 @@ window.guardarEdicionReunion = async function() {
     showToast('✔ Reunión actualizada', false);
     window.cerrarEditarReunion();
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
+};
+
+window.eliminarReunion = async function(id) {
+  if (!await confirmar('Eliminar reunión', '¿Eliminás esta reunión? Esta acción no se puede deshacer.', '🗑 Eliminar', true)) return;
+  try {
+    await deleteDoc(doc(db, 'reuniones', id));
+    showToast('✔ Reunión eliminada', false);
+  } catch (e) { showToast('❌ Error al eliminar', true); console.error(e); }
 };
 
 window.verMasReuniones = function() {

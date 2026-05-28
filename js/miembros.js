@@ -79,6 +79,7 @@ window.editarMiembro = function(id) {
 };
 
 window.guardarMiembro = async function() {
+  if (!state.miCelulaId) { showToast('Error: no hay célula activa', true); return; }
   const nombre = document.getElementById('m-nombre').value.trim();
   if (!nombre) { showToast('Falta el nombre', true); return; }
   const data = {

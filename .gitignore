@@ -6,3 +6,5 @@ versions/
 
 # Firebase
 .firebase/
+serviceAccountKey.json
+scripts/node_modules/
