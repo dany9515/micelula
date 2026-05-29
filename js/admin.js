@@ -84,10 +84,10 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
         </div>
       </div>
       <div class="section">
-        <div class="section-header"><h3>📋 Reuniones (${reuniones.length})</h3></div>
+        <div class="section-header"><h3>📋 Últimas reuniones (${Math.min(reuniones.length, 3)} de ${reuniones.length})</h3></div>
         <div class="section-body">
           ${reuniones.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin reuniones registradas</div>' :
-            reuniones.map(r => `
+            reuniones.slice(0, 3).map(r => `
               <div class="item-card" style="margin-bottom:10px;position:relative">
                 <button onclick="eliminarReunionAdmin('${r.id}')" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
                 <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px;padding-right:40px">
