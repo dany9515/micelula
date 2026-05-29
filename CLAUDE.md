@@ -88,6 +88,30 @@ firebase.json       — Configuración de Firebase Hosting
 
 ---
 
+## Sesión 2026-05-29
+
+### Cambios realizados (todos en producción)
+
+**Verificación — botón ✏️ de materiales visible solo para admin**
+- Confirmado que `renderMateriales()` en `materiales.js` ya protegía correctamente el botón con `esAdmin` en la UI, y que `firestore.rules` protege el `write` con `isAdmin()`. Sin cambios necesarios.
+
+**Commit `9c0cdf8` — feat: limitar historial a últimas 3 reuniones en detalle de célula (admin)**
+- En `admin.js`, `verDetalleCelula()`: el render del historial ahora usa `reuniones.slice(0, 3)`.
+- El encabezado muestra `"Últimas reuniones (N de M)"` para que el admin sepa cuántas hay en total.
+- La consulta ya traía los datos ordenados por `fecha desc`, no fue necesario tocar Firestore.
+
+**Commits `d9ff7a0` y `b46d8fc` — chore: CLAUDE.md, scripts y Firebase Hosting deshabilitado**
+- `CLAUDE.md` y `scripts/` commiteados al repo por primera vez.
+- `firebase.json` modificado: hosting ignora todos los archivos y redirige todo (`**`) con 301 permanente a `https://micelula.operlog.com.ar`.
+- Deploy a Firebase Hosting aplicado para activar el redirect — `micelula-cfcpn.web.app` ya no sirve la app.
+
+### URL de producción
+- **Producción real:** `https://micelula.operlog.com.ar` (GitHub Pages, rama `main`)
+- **Firebase Hosting:** `micelula-cfcpn.web.app` redirige 301 a producción (hosting deshabilitado funcionalmente)
+- **Deploy:** siempre con `git push origin main`. No usar `firebase deploy` salvo para cambios en Firestore rules.
+
+---
+
 ## Pendientes abiertos
 
 ### Menor — onclick con nombre de célula en admin.js
