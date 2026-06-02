@@ -18,8 +18,9 @@ js/
   reuniones.js      — CRUD de reuniones + historial
   materiales.js     — CRUD de materiales (admin)
   admin.js          — Panel de administración
+manifest.json       — PWA manifest (en la raíz)
+sw.js               — Service Worker mínimo (pass-through, requerido para instalabilidad PWA)
 assets/
-  manifest.json     — PWA manifest
   icon-192.svg
   icon-512.svg
 scripts/
@@ -109,6 +110,27 @@ firebase.json       — Configuración de Firebase Hosting
 - **Producción real:** `https://micelula.operlog.com.ar` (GitHub Pages, rama `main`)
 - **Firebase Hosting:** `micelula-cfcpn.web.app` redirige 301 a producción (hosting deshabilitado funcionalmente)
 - **Deploy:** siempre con `git push origin main`. No usar `firebase deploy` salvo para cambios en Firestore rules.
+
+---
+
+## Sesión 2026-06-02
+
+### Cambios realizados (todos en producción)
+
+**Commit `b99ea57` — fix: restaurar instalación PWA — manifest en raíz, SW mínimo, start_url correcto**
+
+Diagnóstico: la PWA dejó de instalarse correctamente (Chrome solo ofrecía "agregar acceso directo" sin ícono). Tres causas:
+1. `index.html` apuntaba a `href="manifest.json"` pero el archivo estaba en `assets/manifest.json` → browser nunca encontraba el manifest → sin ícono ni nombre.
+2. El código en `index.html` solo desregistraba todos los SWs y nunca registraba uno nuevo → Chrome no mostraba el prompt de instalación PWA (requiere SW activo).
+3. `start_url: "/micelula/"` incorrecto para dominio propio `micelula.operlog.com.ar` (debía ser `"/"`).
+
+Cambios:
+- `assets/manifest.json` movido a la raíz del repo como `manifest.json`.
+- `index.html`: link actualizado a `href="/manifest.json"`; bloque de unregister-all reemplazado por `navigator.serviceWorker.register('/sw.js')`.
+- `manifest.json`: `start_url` corregido de `/micelula/` a `/`; paths de íconos actualizados a `assets/icon-*.svg`.
+- `sw.js` creado en la raíz: SW mínimo con install/activate/fetch pass-through, sin caché agresiva.
+
+**Nota sobre el SW:** el bloque unregister-all que existía desde el commit `d9004ef` (sesión 2026-05-27) fue eliminado. Ya no tiene razón de existir: el zombie SW original está largo tiempo desaparecido de todos los browsers. El nuevo `sw.js` es un pass-through puro — no cachea nada, solo satisface el criterio de instalabilidad de Chrome.
 
 ---
 
