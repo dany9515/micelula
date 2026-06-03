@@ -150,6 +150,18 @@ Cambios en `js/admin.js`:
 - Variables de módulo `_reunionesMes` (array) y `_celulaNames` / `_celulaLideres` (mapas `celulaId → nombre/líder`), pobladas en `cargarPanelAdmin()` a partir de los snapshots ya cargados (sin lecturas adicionales a Firestore).
 - `window.toggleReunionesMes()`: alterna el acordeón; renderiza las cards al abrir.
 
+**Commit `d8b2c03` — feat: acordeón de observaciones en panel miembros y detalle admin**
+
+En el panel Miembros del líder y en el modal VER DETALLE del admin, cada card de miembro es ahora clickeable. Al hacer tap se despliega debajo un div con las observaciones. Si el miembro no tiene obs, el tap no hace nada (el div no existe, la función retorna temprano). El `cursor:pointer` solo aparece en cards que tienen obs.
+
+Cambios en `js/miembros.js`:
+- `renderMiembros()`: se quitó el obs inline del card; se agregó `onclick="toggleObsMiembro(id)"` en el card. Los botones ✏️/🗑️ están en un `div` con `onclick="event.stopPropagation()"` para no interferir. Si el miembro tiene obs, se renderiza `<div id="obs-miem-{id}" style="display:none">` al final del card.
+- `window.toggleObsMiembro(id)`: alterna `display:none/block` del div de obs.
+
+Cambios en `js/admin.js`:
+- `verDetalleCelula()`: cambió `miemSnap.docs.map(d => d.data())` a `map(d => ({ id: d.id, ...d.data() }))` para tener el ID disponible. Cada fila de miembro tiene `onclick="toggleObsAdmin(id)"` y, si tiene obs, un `<div id="obs-admin-{id}" style="display:none">`.
+- `window.toggleObsAdmin(id)`: mismo patrón que `toggleObsMiembro`.
+
 ---
 
 ## Pendientes abiertos
