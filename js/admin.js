@@ -83,7 +83,7 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
   modal.classList.add('show');
   try {
     const miemSnap = await getDocs(query(collection(db, 'miembros'), where('celulaId', '==', celulaId)));
-    const miembros = miemSnap.docs.map(d => d.data());
+    const miembros = miemSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     const reuSnap = await getDocs(query(collection(db, 'reuniones'), where('celulaId', '==', celulaId), orderBy('fecha', 'desc')));
     const reuniones = reuSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     contenido.innerHTML = `
@@ -92,9 +92,12 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
         <div class="section-body">
           ${miembros.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin miembros registrados</div>' :
             miembros.map(m => `
-              <div style="padding:8px 0;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-                <span style="color:var(--text)">${escHtml(m.nombre)}</span>
-                ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
+              <div style="padding:8px 0;border-bottom:0.5px solid var(--border);${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsAdmin('${m.id}')">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="color:var(--text)">${escHtml(m.nombre)}</span>
+                  ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
+                </div>
+                ${m.obs ? `<div id="obs-admin-${m.id}" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.85rem">"${escHtml(m.obs)}"</div>` : ''}
               </div>`).join('')}
         </div>
       </div>
@@ -122,6 +125,12 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
     contenido.innerHTML = '<div style="color:red;padding:12px">❌ Error al cargar los datos</div>';
     console.error(e);
   }
+};
+
+window.toggleObsAdmin = function(id) {
+  const el = document.getElementById('obs-admin-' + id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 };
 
 window.cerrarDetalleCelula = function() {

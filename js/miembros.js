@@ -22,20 +22,20 @@ export function renderMiembros() {
     return;
   }
   cont.innerHTML = state.miembrosCache.map(m => `
-    <div class="item-card">
+    <div class="item-card" style="${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsMiembro('${m.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
           <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(m.nombre)}</div>
           ${m.telefono ? `<div class="item-info">📱 ${escHtml(m.telefono)}</div>` : ''}
           ${m.edad ? `<div class="item-info">🎂 ${m.edad} años</div>` : ''}
           ${m.ingreso ? `<div class="item-info">📅 Ingreso: ${formatFecha(m.ingreso)}</div>` : ''}
-          ${m.obs ? `<div class="item-info" style="margin-top:6px;font-style:italic">"${escHtml(m.obs)}"</div>` : ''}
         </div>
-        <div style="display:flex;gap:6px">
+        <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
           <button class="btn-danger" onclick="editarMiembro('${m.id}')" style="border-color:var(--gold);color:var(--gold)">✏️</button>
           <button class="btn-danger" data-id="${m.id}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
         </div>
       </div>
+      ${m.obs ? `<div id="obs-miem-${m.id}" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.9rem">"${escHtml(m.obs)}"</div>` : ''}
     </div>
   `).join('');
 }
@@ -107,6 +107,12 @@ window.guardarMiembro = async function() {
 
 window.eliminarMiembroBtn = function(btn) {
   window.eliminarMiembro(btn.dataset.id, btn.dataset.nombre);
+};
+
+window.toggleObsMiembro = function(id) {
+  const el = document.getElementById('obs-miem-' + id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
 };
 
 window.eliminarMiembro = async function(id, nombre) {
