@@ -172,5 +172,7 @@ if (f.getMonth() === mesActual ...)
 ### Mejora — paginación en panel admin
 `cargarPanelAdmin()` carga todas las colecciones (`celulas`, `miembros`, `reuniones`) de una vez sin límite. Con muchas células puede ser lento y costoso en lecturas de Firestore.
 
+Paginar solo `celulas` (mostrar 5 + botón "Cargar más") no resuelve el problema de fondo: el contador "👥 X miembros" por célula se calcula en memoria a partir de todos los miembros, y los stats globales también requieren todos los documentos. Una solución real requiere o bien desnormalizar (guardar `cantMiembros` en cada documento de `celulas`) o bien separar los queries de stats de los de lista. Dejado para cuando el volumen de datos lo justifique.
+
 ### Mejora — código duplicado en eliminación de célula
 La lógica de borrar miembros + reuniones + célula está duplicada en `celulas.js` (`eliminarCelula`) y `admin.js` (`eliminarCelulaAdmin`). Se podría extraer a una función compartida.
