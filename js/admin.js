@@ -4,6 +4,9 @@ import { showToast, formatFecha, confirmar, escHtml } from './ui.js';
 
 let _detalleCelulaId = null;
 let _detalleCelulaNombre = null;
+let _reunionesMes = [];
+let _celulaNames = {};
+let _celulaLideres = {};
 
 export async function cargarPanelAdmin() {
   if (!state.usuarioActual || state.usuarioActual.rol !== 'admin') return;
@@ -18,6 +21,12 @@ export async function cargarPanelAdmin() {
     const mesActual = new Date().getMonth();
     const yearActual = new Date().getFullYear();
     let reuMes = 0, ofrMes = 0;
+    _reunionesMes = [];
+    _celulaNames = {};
+    celSnap.docs.forEach(d => {
+      _celulaNames[d.id] = d.data().nombre;
+      _celulaLideres[d.id] = d.data().liderNombre || d.data().liderEmail;
+    });
     reuSnap.docs.forEach(d => {
       const r = d.data();
       if (!r.fecha) return;
@@ -25,10 +34,16 @@ export async function cargarPanelAdmin() {
       if (f.getMonth() === mesActual && f.getFullYear() === yearActual) {
         reuMes++;
         ofrMes += r.ofrenda || 0;
+        _reunionesMes.push({ id: d.id, ...r });
       }
     });
+    _reunionesMes.sort((a, b) => b.fecha.localeCompare(a.fecha));
     document.getElementById('admin-stat-reuniones').textContent = reuMes;
     document.getElementById('admin-stat-ofrenda').textContent = '$' + ofrMes.toLocaleString('es-AR');
+    const acc = document.getElementById('admin-reuniones-mes-accordion');
+    if (acc) { acc.style.display = 'none'; acc.innerHTML = ''; }
+    const lbl = document.getElementById('admin-stat-reuniones-lbl');
+    if (lbl) lbl.textContent = 'Reuniones (mes) ▾';
 
     const cont = document.getElementById('admin-celulas-list');
     if (celSnap.empty) {
@@ -153,6 +168,30 @@ window.abrirNuevaCelula = function() {
 
 window.cerrarCelula = function() {
   document.getElementById('modal-celula').classList.remove('show');
+};
+
+window.toggleReunionesMes = function() {
+  const acc = document.getElementById('admin-reuniones-mes-accordion');
+  const lbl = document.getElementById('admin-stat-reuniones-lbl');
+  if (acc.style.display !== 'none') {
+    acc.style.display = 'none';
+    lbl.textContent = 'Reuniones (mes) ▾';
+    return;
+  }
+  lbl.textContent = 'Reuniones (mes) ▴';
+  if (!_reunionesMes.length) {
+    acc.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:12px 4px;text-align:center;font-family:var(--font-body);font-size:0.9rem">Sin registros este mes</div>';
+  } else {
+    acc.innerHTML = _reunionesMes.map(r => `
+      <div class="item-card" style="margin-bottom:8px">
+        <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;font-size:0.9rem;margin-bottom:4px">${escHtml(_celulaNames[r.celulaId] || r.celulaId || '—')}</div>
+        <div class="item-info">👤 ${escHtml(_celulaLideres[r.celulaId] || r.liderEmail || '—')}</div>
+        <div class="item-info">📅 ${formatFecha(r.fecha)}${r.hora ? ' — ' + escHtml(r.hora) + 'hs' : ''}</div>
+        ${r.tema ? `<div class="item-info">📖 ${escHtml(r.tema)}</div>` : ''}
+        <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes${r.ofrenda > 0 ? ' &nbsp;·&nbsp; 💰 $' + r.ofrenda.toLocaleString('es-AR') : ''}</div>
+      </div>`).join('');
+  }
+  acc.style.display = 'block';
 };
 
 window.guardarCelula = async function() {

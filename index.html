@@ -273,9 +273,10 @@
           <div class="stats-grid">
             <div class="stat-card"><div class="num" id="admin-stat-celulas">—</div><div class="lbl">Células activas</div></div>
             <div class="stat-card"><div class="num" id="admin-stat-personas">—</div><div class="lbl">Personas totales</div></div>
-            <div class="stat-card"><div class="num" id="admin-stat-reuniones">—</div><div class="lbl">Reuniones (mes)</div></div>
+            <div class="stat-card" onclick="toggleReunionesMes()" style="cursor:pointer;user-select:none"><div class="num" id="admin-stat-reuniones">—</div><div class="lbl" id="admin-stat-reuniones-lbl">Reuniones (mes) ▾</div></div>
             <div class="stat-card"><div class="num" id="admin-stat-ofrenda">$0</div><div class="lbl">Ofrendas (mes)</div></div>
           </div>
+          <div id="admin-reuniones-mes-accordion" style="display:none;margin-top:8px"></div>
           <button class="btn-primary" onclick="abrirNuevaCelula()" style="margin-top:14px;display:none">➕ Crear Célula y Asignar Líder</button>
         </div>
       </div>
