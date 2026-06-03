@@ -134,6 +134,24 @@ Cambios:
 
 ---
 
+## Sesión 2026-06-03
+
+### Cambios realizados (todos en producción)
+
+**Commit `a198eda` — feat: acordeón de reuniones del mes en panel admin**
+
+La stat card "Reuniones (mes)" del panel admin funciona ahora como acordeón. Al hacer click se despliega debajo una lista con todas las reuniones del mes de todas las células, ordenadas por fecha descendente. Cada ítem muestra: nombre de la célula, nombre del líder, fecha, hora, tema, cantidad de asistentes y ofrenda. Si no hay reuniones el mes muestra "Sin registros este mes". El chevron del label alterna entre ▾ (cerrado) y ▴ (abierto). El acordeón se cierra y resetea automáticamente cada vez que se recarga el panel admin.
+
+Cambios en `index.html`:
+- La stat card de reuniones tiene `onclick="toggleReunionesMes()"`, `cursor:pointer` e `id="admin-stat-reuniones-lbl"` en el label.
+- Se agregó `<div id="admin-reuniones-mes-accordion">` (oculto por defecto) entre el stats-grid y el botón "Crear Célula".
+
+Cambios en `js/admin.js`:
+- Variables de módulo `_reunionesMes` (array) y `_celulaNames` / `_celulaLideres` (mapas `celulaId → nombre/líder`), pobladas en `cargarPanelAdmin()` a partir de los snapshots ya cargados (sin lecturas adicionales a Firestore).
+- `window.toggleReunionesMes()`: alterna el acordeón; renderiza las cards al abrir.
+
+---
+
 ## Pendientes abiertos
 
 ### Menor — onclick con nombre de célula en admin.js
