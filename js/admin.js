@@ -7,6 +7,9 @@ let _detalleCelulaNombre = null;
 let _reunionesMes = [];
 let _celulaNames = {};
 let _celulaLideres = {};
+let _todasCelulas = [];
+let _miemPorCel = {};
+let _celulasMostradas = 5;
 
 export async function cargarPanelAdmin() {
   if (!state.usuarioActual || state.usuarioActual.rol !== 'admin') return;
@@ -30,7 +33,8 @@ export async function cargarPanelAdmin() {
     reuSnap.docs.forEach(d => {
       const r = d.data();
       if (!r.fecha) return;
-      const f = new Date(r.fecha);
+      const [fy, fm, fd] = r.fecha.split('-').map(Number);
+      const f = new Date(fy, fm - 1, fd);
       if (f.getMonth() === mesActual && f.getFullYear() === yearActual) {
         reuMes++;
         ofrMes += r.ofrenda || 0;
@@ -45,32 +49,44 @@ export async function cargarPanelAdmin() {
     const lbl = document.getElementById('admin-stat-reuniones-lbl');
     if (lbl) lbl.textContent = 'Reuniones (mes) ▾';
 
-    const cont = document.getElementById('admin-celulas-list');
-    if (celSnap.empty) {
-      cont.innerHTML = '<div class="empty-state"><div class="icon">📍</div><div>Aún no hay células creadas.</div></div>';
-      return;
-    }
-    const celulas = celSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const miemPorCel = {};
+    _todasCelulas = celSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    _miemPorCel = {};
     miemSnap.docs.forEach(d => {
       const cId = d.data().celulaId;
-      miemPorCel[cId] = (miemPorCel[cId] || 0) + 1;
+      _miemPorCel[cId] = (_miemPorCel[cId] || 0) + 1;
     });
-    cont.innerHTML = celulas.map(c => `
-      <div class="item-card">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
-            <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(c.nombre)}</div>
-            <div class="item-info">👤 Líder: ${escHtml(c.liderNombre || c.liderEmail)}</div>
-            <div class="item-info">✉️ ${escHtml(c.liderEmail)}</div>
-            <div class="item-info">👥 ${miemPorCel[c.id] || 0} miembros</div>
-          </div>
-          <button onclick="verDetalleCelula('${c.id}','${escHtml(c.nombre)}');" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
-        </div>
-      </div>
-    `).join('');
+    _celulasMostradas = 5;
+    renderCelulasAdmin();
   } catch (e) { console.error(e); }
 }
+
+function renderCelulasAdmin() {
+  const cont = document.getElementById('admin-celulas-list');
+  if (_todasCelulas.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="icon">📍</div><div>Aún no hay células creadas.</div></div>';
+    return;
+  }
+  const visibles = _todasCelulas.slice(0, _celulasMostradas);
+  const restantes = _todasCelulas.length - _celulasMostradas;
+  cont.innerHTML = visibles.map(c => `
+    <div class="item-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(c.nombre)}</div>
+          <div class="item-info">👤 Líder: ${escHtml(c.liderNombre || c.liderEmail)}</div>
+          <div class="item-info">✉️ ${escHtml(c.liderEmail)}</div>
+          <div class="item-info">👥 ${_miemPorCel[c.id] || 0} miembros</div>
+        </div>
+        <button data-cel-id="${c.id}" data-cel-nombre="${escHtml(c.nombre)}" onclick="verDetalleCelula(this.dataset.celId, this.dataset.celNombre);" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
+      </div>
+    </div>
+  `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="cargarMasCelulas()" style="margin-top:4px">Cargar más (${restantes} restante${restantes !== 1 ? 's' : ''})</button>` : '');
+}
+
+window.cargarMasCelulas = function() {
+  _celulasMostradas += 5;
+  renderCelulasAdmin();
+};
 
 window.verDetalleCelula = async function(celulaId, nombreCelula) {
   _detalleCelulaId = celulaId;

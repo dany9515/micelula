@@ -164,27 +164,21 @@ Cambios en `js/admin.js`:
 
 ---
 
+## Sesión 2026-06-04
+
+### Cambios realizados (todos en producción)
+
+**Commit — fix+feat: paginación en admin, bug apóstrofe y timezone**
+
+- `admin.js`: panel admin muestra las primeras 5 células con botón "Cargar más (N restantes)" que suma 5 por click. Variables de módulo `_todasCelulas`, `_miemPorCel`, `_celulasMostradas`; función interna `renderCelulasAdmin()`; `window.cargarMasCelulas()`. El panel resetea a 5 al recargar.
+- `admin.js`: botón "VER DETALLE" migrado a `data-cel-id` / `data-cel-nombre` + `this.dataset` — elimina el bug de apóstrofe en nombres de células.
+- `admin.js`: parseo de fecha corregido de `new Date(r.fecha)` (UTC) a `new Date(fy, fm-1, fd)` (local) — el 1° de cada mes ya no cae en el mes anterior en Argentina.
+
+**Nota:** el botón ✏️ en Historial del líder ya existía desde la sesión 2026-05-27 (commit `c663c44`).
+
+---
+
 ## Pendientes abiertos
-
-### Menor — onclick con nombre de célula en admin.js
-En `admin.js`, el botón "VER DETALLE" usa `escHtml(c.nombre)` dentro de un atributo `onclick`:
-```js
-onclick="verDetalleCelula('${c.id}','${escHtml(c.nombre)}')"
-```
-`escHtml` codifica `'` como `&#39;`, que el HTML parser decodifica a `'` antes de ejecutar el JS. Si un nombre de célula contiene apóstrofe (ej: `Célula O'Brien`), el botón rompería. Solución: migrar a `data-attributes` igual que se hizo con miembros y materiales.
-
-### Menor — bug de timezone en contador de reuniones del admin
-En `admin.js`, `cargarPanelAdmin()` hace:
-```js
-const f = new Date(r.fecha);  // parsea como UTC
-if (f.getMonth() === mesActual ...)
-```
-`new Date("2026-05-01")` se parsea como UTC medianoche. En Argentina (UTC-3) eso es el 30 de abril a las 21:00 local, por lo que `getMonth()` devolvería abril en lugar de mayo. Afecta solo al primer día de cada mes. Solución: parsear la fecha como local: `const [y,m,d] = r.fecha.split('-'); new Date(y, m-1, d)`.
-
-### Mejora — paginación en panel admin
-`cargarPanelAdmin()` carga todas las colecciones (`celulas`, `miembros`, `reuniones`) de una vez sin límite. Con muchas células puede ser lento y costoso en lecturas de Firestore.
-
-Paginar solo `celulas` (mostrar 5 + botón "Cargar más") no resuelve el problema de fondo: el contador "👥 X miembros" por célula se calcula en memoria a partir de todos los miembros, y los stats globales también requieren todos los documentos. Una solución real requiere o bien desnormalizar (guardar `cantMiembros` en cada documento de `celulas`) o bien separar los queries de stats de los de lista. Dejado para cuando el volumen de datos lo justifique.
 
 ### Mejora — código duplicado en eliminación de célula
 La lógica de borrar miembros + reuniones + célula está duplicada en `celulas.js` (`eliminarCelula`) y `admin.js` (`eliminarCelulaAdmin`). Se podría extraer a una función compartida.
