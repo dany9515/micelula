@@ -6,6 +6,8 @@ export function initAuth(onAuthSuccess) {
   window._onAuthSuccess = onAuthSuccess;
 }
 
+let _loginPass = '';
+
 window.togglePass = function(inputId, btnId) {
   const input = document.getElementById(inputId);
   const btn = document.getElementById(btnId);
@@ -27,6 +29,7 @@ window.doLogin = async function() {
   btn.disabled = true; btn.textContent = 'Ingresando...';
   try {
     await signInWithEmailAndPassword(auth, email, pass);
+    _loginPass = pass;
   } catch (e) {
     errBox.innerHTML = '<div class="login-error" style="display:block">❌ Usuario o contraseña incorrectos.</div>';
     btn.disabled = false; btn.textContent = 'Entrar';
@@ -38,6 +41,7 @@ window.doLogout = async function() {
     if (state.unsubMiembros) { state.unsubMiembros(); state.unsubMiembros = null; }
     if (state.unsubReuniones) { state.unsubReuniones(); state.unsubReuniones = null; }
     if (state.unsubMateriales) { state.unsubMateriales(); state.unsubMateriales = null; }
+    _loginPass = '';
     await signOut(auth);
     const btn = document.getElementById('login-btn');
     if (btn) { btn.disabled = false; btn.textContent = 'Entrar'; }
@@ -63,6 +67,11 @@ window.doCambioPassObligatorio = async function() {
 
   btn.disabled = true; btn.textContent = 'Guardando...';
   try {
+    if (_loginPass) {
+      const cred = EmailAuthProvider.credential(auth.currentUser.email, _loginPass);
+      await reauthenticateWithCredential(auth.currentUser, cred);
+      _loginPass = '';
+    }
     await updatePassword(auth.currentUser, nueva);
     await updateDoc(doc(db, 'usuarios', auth.currentUser.uid), { cambiarPassword: false });
     state.usuarioActual.cambiarPassword = false;
