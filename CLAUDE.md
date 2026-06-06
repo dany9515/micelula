@@ -178,6 +178,60 @@ Cambios en `js/admin.js`:
 
 ---
 
+## Sesión 2026-06-05
+
+### Cambios realizados (pendientes de commit y push)
+
+**Fotos en reuniones + carrusel en panel Inicio**
+
+Archivos nuevos:
+- `js/fotos.js` — carga la colección `fotos` ordenada por `creadaEn desc` (limit 20), filtra los últimos 7 días (fallback a más recientes), renderiza carrusel con botones ‹ › y contador N/total. Oculta el contenedor si no hay fotos.
+- `storage.rules` — reglas de Firebase Storage: `allow read/write if request.auth != null` para `fotos-celulas/{allPaths=**}`.
+
+Archivos modificados:
+- `js/firebase.js` — agregados imports y exports de Storage SDK (`getStorage`, `ref`, `uploadBytes`, `getDownloadURL`) y `limit` de Firestore.
+- `js/reuniones.js` — `guardarReunion()` ahora es async; si hay foto seleccionada la comprime (max 1200px, JPEG 82%) con canvas, la sube a `fotos-celulas/{celulaId}/{fecha}`, guarda `fotoUrl` en el doc de reunión y crea un doc en colección `fotos` para el carrusel. Nuevas funciones: `window.onFotoPreview()` (preview local con FileReader), `window.quitarFoto()`, `_limpiarFormReunion()` (ahora también llama `quitarFoto`).
+- `js/app.js` — importa `cargarCarrusel` de `fotos.js`; lo llama en `mostrarApp()`.
+- `index.html` — sección "📸 Foto de la reunión (opcional)" en el formulario de reunión (botón estilizado + input file oculto + contenedor de preview); carrusel `#carrusel-container` en panel Inicio (entre stats y quick-actions), oculto por defecto hasta que `cargarCarrusel()` confirme que hay fotos.
+- `firestore.rules` — nueva colección `fotos`: `allow read/write if isAuth()`.
+- `firebase.json` — agregado bloque `"storage": { "rules": "storage.rules" }`.
+
+Nueva colección Firestore `fotos`:
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| `reunionId` | string | ID del doc en `reuniones` |
+| `celulaId` | string | ID de la célula |
+| `celulaNombre` | string | Nombre de la célula (desnormalizado) |
+| `liderNombre` | string | Nombre del líder |
+| `fecha` | string | YYYY-MM-DD |
+| `fotoUrl` | string | URL de descarga de Storage |
+| `creadaEn` | timestamp | serverTimestamp() |
+
+Reglas ya deployadas a Firebase (Firestore + Storage). Código local, sin commit. **Feature pausada — se retoma en sesión futura.**
+
+**Commit `ebff9e3` — fix: parsear ofrenda en formato argentino (punto de miles)**
+
+`parseFloat("26.000")` devolvía `26` porque el browser interpreta el punto como separador decimal. Fix en `js/reuniones.js`:
+- Nueva función `parseOfrenda(val)`: quita todos los puntos de miles, reemplaza coma decimal por punto y llama `parseFloat`. Soporta `26.000` → `26000`, `1.000.000` → `1000000`, `26,5` → `26.5`.
+- Usada en `guardarReunion()` y `guardarEdicionReunion()` en lugar de `parseFloat` directo.
+
+Fix en `index.html`:
+- Ambos inputs de ofrenda cambiados de `type="number"` a `type="text" inputmode="decimal"` — el `type="number"` era la raíz del problema (el browser siempre trata el punto como decimal en inputs numéricos).
+
+La visualización con `toLocaleString('es-AR')` ya estaba correcta y no requirió cambios.
+
+**Commit `db75738` — fix: re-autenticación en cambio de contraseña obligatorio**
+
+Una usuaria no podía cambiar su contraseña en la pantalla de cambio obligatorio (primer login). La validación de caracteres especiales ya incluía `*`, así que el problema era `auth/requires-recent-login`: Firebase considera `updatePassword` una operación sensible y puede rechazarla aunque el login sea reciente.
+
+Fix en `js/auth.js`:
+- `_loginPass` guarda la contraseña del login temporalmente.
+- `doCambioPassObligatorio()` hace `reauthenticateWithCredential` con esa contraseña justo antes de `updatePassword`, garantizando sesión fresca.
+- `_loginPass` se limpia tras usarse y también al hacer logout.
+- No afecta a usuarios que ya cambiaron su contraseña (nunca llegan a `doCambioPassObligatorio`).
+
+---
+
 ## Pendientes abiertos
 
 ### Mejora — código duplicado en eliminación de célula
