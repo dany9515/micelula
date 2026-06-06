@@ -1,6 +1,13 @@
-import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
+import { db, storage, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp, ref, uploadBytes, getDownloadURL } from './firebase.js';
 import { state } from './state.js';
 import { showToast, formatFecha, actualizarStats, escHtml, confirmar } from './ui.js';
+
+function parseOfrenda(val) {
+  if (!val || !String(val).trim()) return 0;
+  // Acepta formato es-AR (26.000) y estándar (26000); quita puntos de miles, reemplaza coma decimal
+  const cleaned = String(val).trim().replace(/\./g, '').replace(',', '.');
+  return parseFloat(cleaned) || 0;
+}
 
 export function suscribirReuniones() {
   if (state.unsubReuniones) { state.unsubReuniones(); state.unsubReuniones = null; }
@@ -48,7 +55,6 @@ export function renderHistorial() {
 window.guardarReunion = async function() {
   if (!state.miCelulaId || state.miCelulaId === 'admin') { showToast('Error: no hay célula activa', true); return; }
   const fecha = document.getElementById('reu-fecha').value;
-  const hora = document.getElementById('reu-hora').value;
   if (!fecha) { showToast('Falta la fecha', true); return; }
   const asistentesIds = [];
   document.querySelectorAll('.check-row.checked').forEach(r => asistentesIds.push(r.dataset.id));
@@ -60,10 +66,11 @@ window.guardarReunion = async function() {
     celulaId: state.miCelulaId,
     liderEmail: state.usuarioActual.email,
     liderNombre: state.usuarioActual.nombre,
-    fecha, hora,
+    fecha,
+    hora: document.getElementById('reu-hora').value,
     lugar: document.getElementById('reu-lugar').value.trim(),
     tema: document.getElementById('reu-tema').value.trim(),
-    ofrenda: parseFloat(document.getElementById('reu-ofrenda').value) || 0,
+    ofrenda: parseOfrenda(document.getElementById('reu-ofrenda').value),
     visitas: document.getElementById('reu-visitas').value.trim(),
     obs: document.getElementById('reu-obs').value.trim(),
     asistentesIds,
@@ -71,17 +78,86 @@ window.guardarReunion = async function() {
     cantAsistentes: asistentesIds.length,
     timestamp: serverTimestamp()
   };
+  const fotoInput = document.getElementById('foto-reunion-input');
+  const file = fotoInput.files[0];
+  const btnGuardar = document.querySelector('#panel-reunion > .btn-primary');
+  if (btnGuardar) btnGuardar.disabled = true;
   try {
-    await addDoc(collection(db, 'reuniones'), data);
-    showToast(`✔ Reunión guardada — ${asistentesIds.length} asistentes`, false);
-    document.getElementById('reu-lugar').value = '';
-    document.getElementById('reu-tema').value = '';
-    document.getElementById('reu-ofrenda').value = '';
-    document.getElementById('reu-visitas').value = '';
-    document.getElementById('reu-obs').value = '';
-    document.querySelectorAll('.check-row.checked').forEach(r => r.classList.remove('checked'));
+    if (file) {
+      showToast('⏳ Subiendo foto...', false);
+      const comprimida = await _comprimirImagen(file);
+      const storageRef = ref(storage, `fotos-celulas/${data.celulaId}/${data.fecha}`);
+      await uploadBytes(storageRef, comprimida);
+      const fotoUrl = await getDownloadURL(storageRef);
+      data.fotoUrl = fotoUrl;
+      const reunionRef = await addDoc(collection(db, 'reuniones'), data);
+      const celulaNombre = state.misCelulas.find(c => c.id === data.celulaId)?.nombre || '';
+      await addDoc(collection(db, 'fotos'), {
+        reunionId: reunionRef.id,
+        celulaId: data.celulaId,
+        celulaNombre,
+        liderNombre: data.liderNombre,
+        fecha: data.fecha,
+        fotoUrl,
+        creadaEn: serverTimestamp()
+      });
+      showToast(`✔ Reunión guardada con foto — ${data.cantAsistentes} asistentes`, false);
+    } else {
+      await addDoc(collection(db, 'reuniones'), data);
+      showToast(`✔ Reunión guardada — ${data.cantAsistentes} asistentes`, false);
+    }
+    _limpiarFormReunion();
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
+  if (btnGuardar) btnGuardar.disabled = false;
 };
+
+window.onFotoPreview = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('foto-preview').src = e.target.result;
+    document.getElementById('foto-preview-container').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.quitarFoto = function() {
+  document.getElementById('foto-reunion-input').value = '';
+  document.getElementById('foto-preview-container').style.display = 'none';
+  document.getElementById('foto-preview').src = '';
+};
+
+function _limpiarFormReunion() {
+  ['reu-lugar', 'reu-tema', 'reu-ofrenda', 'reu-visitas', 'reu-obs'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.querySelectorAll('.check-row.checked').forEach(r => r.classList.remove('checked'));
+  window.quitarFoto();
+}
+
+async function _comprimirImagen(file) {
+  return new Promise(resolve => {
+    const maxPx = 1200;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxPx || h > maxPx) {
+          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
+          else { w = Math.round(w * maxPx / h); h = maxPx; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.82);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 window.editarReunion = function(id) {
   const r = state.reunionesCache.find(x => x.id === id);
@@ -130,7 +206,7 @@ window.guardarEdicionReunion = async function() {
       hora: document.getElementById('edit-reu-hora').value,
       lugar: document.getElementById('edit-reu-lugar').value.trim(),
       tema: document.getElementById('edit-reu-tema').value.trim(),
-      ofrenda: parseFloat(document.getElementById('edit-reu-ofrenda').value) || 0,
+      ofrenda: parseOfrenda(document.getElementById('edit-reu-ofrenda').value),
       visitas: document.getElementById('edit-reu-visitas').value.trim(),
       obs: document.getElementById('edit-reu-obs').value.trim(),
       asistentesIds,
