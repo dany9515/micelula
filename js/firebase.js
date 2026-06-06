@@ -5,9 +5,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import {
   getFirestore, collection, addDoc, updateDoc, deleteDoc, doc,
-  query, where, orderBy, getDocs, getDoc, setDoc,
+  query, where, orderBy, limit, getDocs, getDoc, setDoc,
   serverTimestamp, Timestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  getStorage, ref, uploadBytes, getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBaVe16ISpOu_JduU1h6ZcZw2xdiwdc8J0",
@@ -21,11 +24,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+export const storage = getStorage(app);
 
 export {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   updatePassword, reauthenticateWithCredential, EmailAuthProvider,
   collection, addDoc, updateDoc, deleteDoc, doc,
   query, where, orderBy, getDocs, getDoc, setDoc,
-  serverTimestamp, Timestamp, onSnapshot
+  serverTimestamp, Timestamp, onSnapshot, limit,
+  ref, uploadBytes, getDownloadURL
 };
