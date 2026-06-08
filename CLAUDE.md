@@ -209,6 +209,9 @@ Nueva colección Firestore `fotos`:
 
 Reglas ya deployadas a Firebase (Firestore + Storage). Código local, sin commit. **Feature pausada — se retoma en sesión futura.**
 
+**Lección aprendida — no commitear archivos relacionados juntos rompe producción:**
+El commit `ebff9e3` incluyó `reuniones.js` con imports de Storage (`storage`, `ref`, `uploadBytes`, `getDownloadURL`) pero `firebase.js` quedó sin commitear. En producción `firebase.js` no exportaba esos símbolos → `SyntaxError` al cargar el módulo → la app entera fallaba (ni el login aparecía). Fix en sesión 2026-06-06.
+
 **Commit `ebff9e3` — fix: parsear ofrenda en formato argentino (punto de miles)**
 
 `parseFloat("26.000")` devolvía `26` porque el browser interpreta el punto como separador decimal. Fix en `js/reuniones.js`:
@@ -229,6 +232,36 @@ Fix en `js/auth.js`:
 - `doCambioPassObligatorio()` hace `reauthenticateWithCredential` con esa contraseña justo antes de `updatePassword`, garantizando sesión fresca.
 - `_loginPass` se limpia tras usarse y también al hacer logout.
 - No afecta a usuarios que ya cambiaron su contraseña (nunca llegan a `doCambioPassObligatorio`).
+
+---
+
+## Sesión 2026-06-06
+
+### Cambios realizados (en producción)
+
+**Commit `fbde667` — fix: exportar Storage SDK desde firebase.js**
+
+La app quedó completamente rota luego de la sesión anterior: `reuniones.js` (commiteado en `ebff9e3`) importaba `storage`, `ref`, `uploadBytes`, `getDownloadURL` de `firebase.js`, pero `firebase.js` nunca se commiteó con esos exports. Resultado: `SyntaxError` al parsear el módulo → `doLogin is not defined` → ningún usuario podía entrar.
+
+Fix: commitear `firebase.js` con los exports faltantes de Storage SDK y `limit` de Firestore. Los demás archivos de la feature fotos (`js/app.js`, `firestore.rules`, `firebase.json`, `js/fotos.js`, `storage.rules`) siguen pendientes sin commitear.
+
+**Sobre el caché post-deploy:**
+- Usuarios con PWA instalada: el SW hace fetch directo a la red → se actualiza solo.
+- Usuarios en browser sin SW: necesitan hard reload (Ctrl+Shift+R) o abrir en incógnito hasta que el CDN de GitHub Pages propague (generalmente pocos minutos).
+
+---
+
+## Sesión 2026-06-08
+
+### Cambios realizados (en producción)
+
+**Commit `57b86cf` — feat: paginación en acordeón reuniones y orden células por fecha**
+
+Dos mejoras en `js/admin.js`:
+
+1. **Acordeón de reuniones del mes** — antes mostraba todas las reuniones del mes de una vez. Ahora muestra las primeras 5 (ya ordenadas por `fecha` desc) con un botón "Cargar más (N restantes)" que suma de a 5. Nueva variable de módulo `_reunionesMesMostradas = 5`; lógica de render extraída a `renderReunionesMesAccordion()`; `window.cargarMasReunionesMes()`. El contador se resetea a 5 al cerrar el acordeón y al recargar el panel.
+
+2. **Orden de células** — `_todasCelulas` ahora se ordena por `creadaEn.seconds` descendente tras construirse, mostrando las células más nuevas primero. Las células sin `creadaEn` (documentos viejos) quedan al final (se les asigna `seconds = 0`).
 
 ---
 
