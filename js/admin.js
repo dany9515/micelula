@@ -10,6 +10,7 @@ let _celulaLideres = {};
 let _todasCelulas = [];
 let _miemPorCel = {};
 let _celulasMostradas = 5;
+let _reunionesMesMostradas = 5;
 
 export async function cargarPanelAdmin() {
   if (!state.usuarioActual || state.usuarioActual.rol !== 'admin') return;
@@ -48,8 +49,10 @@ export async function cargarPanelAdmin() {
     if (acc) { acc.style.display = 'none'; acc.innerHTML = ''; }
     const lbl = document.getElementById('admin-stat-reuniones-lbl');
     if (lbl) lbl.textContent = 'Reuniones (mes) ▾';
+    _reunionesMesMostradas = 5;
 
     _todasCelulas = celSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    _todasCelulas.sort((a, b) => (b.creadaEn?.seconds ?? 0) - (a.creadaEn?.seconds ?? 0));
     _miemPorCel = {};
     miemSnap.docs.forEach(d => {
       const cId = d.data().celulaId;
@@ -195,28 +198,42 @@ window.cerrarCelula = function() {
   document.getElementById('modal-celula').classList.remove('show');
 };
 
+function renderReunionesMesAccordion() {
+  const acc = document.getElementById('admin-reuniones-mes-accordion');
+  if (!_reunionesMes.length) {
+    acc.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:12px 4px;text-align:center;font-family:var(--font-body);font-size:0.9rem">Sin registros este mes</div>';
+    return;
+  }
+  const visibles = _reunionesMes.slice(0, _reunionesMesMostradas);
+  const restantes = _reunionesMes.length - _reunionesMesMostradas;
+  acc.innerHTML = visibles.map(r => `
+    <div class="item-card" style="margin-bottom:8px">
+      <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;font-size:0.9rem;margin-bottom:4px">${escHtml(_celulaNames[r.celulaId] || r.celulaId || '—')}</div>
+      <div class="item-info">👤 ${escHtml(_celulaLideres[r.celulaId] || r.liderEmail || '—')}</div>
+      <div class="item-info">📅 ${formatFecha(r.fecha)}${r.hora ? ' — ' + escHtml(r.hora) + 'hs' : ''}</div>
+      ${r.tema ? `<div class="item-info">📖 ${escHtml(r.tema)}</div>` : ''}
+      <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes${r.ofrenda > 0 ? ' &nbsp;·&nbsp; 💰 $' + r.ofrenda.toLocaleString('es-AR') : ''}</div>
+    </div>`).join('')
+    + (restantes > 0 ? `<button class="btn-secondary" onclick="cargarMasReunionesMes()" style="margin-top:4px">Cargar más (${restantes} restante${restantes !== 1 ? 's' : ''})</button>` : '');
+}
+
 window.toggleReunionesMes = function() {
   const acc = document.getElementById('admin-reuniones-mes-accordion');
   const lbl = document.getElementById('admin-stat-reuniones-lbl');
   if (acc.style.display !== 'none') {
     acc.style.display = 'none';
     lbl.textContent = 'Reuniones (mes) ▾';
+    _reunionesMesMostradas = 5;
     return;
   }
   lbl.textContent = 'Reuniones (mes) ▴';
-  if (!_reunionesMes.length) {
-    acc.innerHTML = '<div style="color:var(--muted);font-style:italic;padding:12px 4px;text-align:center;font-family:var(--font-body);font-size:0.9rem">Sin registros este mes</div>';
-  } else {
-    acc.innerHTML = _reunionesMes.map(r => `
-      <div class="item-card" style="margin-bottom:8px">
-        <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;font-size:0.9rem;margin-bottom:4px">${escHtml(_celulaNames[r.celulaId] || r.celulaId || '—')}</div>
-        <div class="item-info">👤 ${escHtml(_celulaLideres[r.celulaId] || r.liderEmail || '—')}</div>
-        <div class="item-info">📅 ${formatFecha(r.fecha)}${r.hora ? ' — ' + escHtml(r.hora) + 'hs' : ''}</div>
-        ${r.tema ? `<div class="item-info">📖 ${escHtml(r.tema)}</div>` : ''}
-        <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes${r.ofrenda > 0 ? ' &nbsp;·&nbsp; 💰 $' + r.ofrenda.toLocaleString('es-AR') : ''}</div>
-      </div>`).join('');
-  }
+  renderReunionesMesAccordion();
   acc.style.display = 'block';
+};
+
+window.cargarMasReunionesMes = function() {
+  _reunionesMesMostradas += 5;
+  renderReunionesMesAccordion();
 };
 
 window.guardarCelula = async function() {
