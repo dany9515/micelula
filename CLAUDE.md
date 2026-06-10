@@ -285,3 +285,21 @@ Cambios:
 
 ### Mejora — código duplicado en eliminación de célula
 La lógica de borrar miembros + reuniones + célula está duplicada en `celulas.js` (`eliminarCelula`) y `admin.js` (`eliminarCelulaAdmin`). Se podría extraer a una función compartida.
+
+### Mejoras propuestas (sesión 2026-06-10, sin empezar)
+
+Ordenadas por valor; recomendación de arranque: 1 + 2.
+
+**Alto valor, esfuerzo bajo/medio:**
+1. **Reporte mensual exportable (admin)** — botón "Exportar mes" que genere CSV (célula, fecha, tema, asistentes, ofrenda, total general) con los datos ya cargados en el panel admin. Sin lecturas extra a Firestore.
+2. **Alerta de células inactivas (admin)** — badge rojo en la card de células sin reunión registrada hace más de 2 semanas. Se calcula con datos ya cargados.
+3. **Aviso de "nueva versión disponible"** — `version.json` consultado al iniciar; si difiere de la versión local, banner "tocá para recargar". Elimina los hard reload manuales post-deploy.
+4. **Retomar feature de fotos** — código local pausado (~80% hecho), reglas ya deployadas. Commitear todos los archivos juntos.
+
+**Valor alto, esfuerzo medio:**
+5. **Seguimiento de visitas** — detectar nombres repetidos en `visitas` de reuniones recientes y sugerir "¿Convertir a miembro?". El feature de mayor impacto pastoral.
+6. **Gráfico de tendencia de asistencia** — mini-gráfica de barras (últimos 2-3 meses) en historial del líder y detalle admin. Con divs y CSS, sin librerías.
+
+**Técnicas / mantenimiento:**
+7. **Soporte offline real** — `sw.js` es pass-through puro; sin señal la PWA no abre. Estrategia network-first con fallback a caché (sin riesgo de SW zombie).
+8. **Validación en reglas de Firestore** — validar tipos de campos y que `liderEmail == request.auth.token.email` al crear reuniones.
