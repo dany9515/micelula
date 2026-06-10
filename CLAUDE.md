@@ -265,6 +265,22 @@ Dos mejoras en `js/admin.js`:
 
 ---
 
+## Sesión 2026-06-10
+
+### Cambios realizados (en producción)
+
+**Commit `985fcf7` — fix: quitar UI y lógica de subir foto en reuniones (feature pausada)**
+
+El commit `ebff9e3` (fix de ofrenda, sesión 2026-06-05) arrastró sin querer parte de la feature de fotos: la sección "📸 Foto de la reunión (opcional)" en `index.html` y la lógica de subida en `js/reuniones.js`. Los líderes veían el botón "📷 Seleccionar foto" en producción aunque la feature está pausada e incompleta.
+
+Cambios:
+- `index.html`: eliminada la sección de foto del formulario de reunión (botón, preview e input file). El contenedor del carrusel (`#carrusel-container`) se dejó porque tiene `display:none` y nada lo activa — es invisible.
+- `js/reuniones.js`: `guardarReunion()` vuelve al `addDoc` simple (sin upload a Storage); eliminadas `onFotoPreview`, `quitarFoto`, `_comprimirImagen` y los imports de Storage. Se conservó el deshabilitado del botón Guardar durante el guardado (previene doble click).
+
+**Estado de la feature fotos (pausada):** los archivos sin commitear siguen en el working tree para retomarla: `js/fotos.js`, `storage.rules`, y modificaciones a `firebase.json`, `firestore.rules`, `js/app.js`. Los exports de Storage en `js/firebase.js` quedaron commiteados (`fbde667`) — no se usan pero harán falta al retomar.
+
+---
+
 ## Pendientes abiertos
 
 ### Mejora — código duplicado en eliminación de célula
