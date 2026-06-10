@@ -224,15 +224,6 @@
           <div class="field"><label>Ofrenda recolectada ($)</label><input type="text" inputmode="decimal" id="reu-ofrenda" placeholder="0"></div>
           <div class="field"><label>Visitas (nombres separados por coma)</label><input type="text" id="reu-visitas" placeholder="Ej: María González, Pedro Ruíz"></div>
           <div class="field"><label>Observaciones</label><textarea id="reu-obs" placeholder="Notas del líder..."></textarea></div>
-          <div class="field">
-            <label>📸 Foto de la reunión <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
-            <div id="foto-preview-container" style="display:none;margin-bottom:10px;position:relative">
-              <img id="foto-preview" style="max-width:100%;max-height:200px;border-radius:8px;display:block;object-fit:cover">
-              <button onclick="quitarFoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;border-radius:50%;color:#fff;width:26px;height:26px;cursor:pointer;font-size:0.85rem;line-height:1">✕</button>
-            </div>
-            <label for="foto-reunion-input" style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,164,74,0.08);border:1px dashed var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-body);font-size:0.9rem;padding:10px 16px;cursor:pointer">📷 Seleccionar foto</label>
-            <input type="file" id="foto-reunion-input" accept="image/*" style="display:none" onchange="onFotoPreview(this)">
-          </div>
         </div>
       </div>
       <div class="section">

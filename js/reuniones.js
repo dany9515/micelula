@@ -1,4 +1,4 @@
-import { db, storage, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp, ref, uploadBytes, getDownloadURL } from './firebase.js';
+import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
 import { showToast, formatFecha, actualizarStats, escHtml, confirmar } from './ui.js';
 
@@ -78,54 +78,14 @@ window.guardarReunion = async function() {
     cantAsistentes: asistentesIds.length,
     timestamp: serverTimestamp()
   };
-  const fotoInput = document.getElementById('foto-reunion-input');
-  const file = fotoInput.files[0];
   const btnGuardar = document.querySelector('#panel-reunion > .btn-primary');
   if (btnGuardar) btnGuardar.disabled = true;
   try {
-    if (file) {
-      showToast('⏳ Subiendo foto...', false);
-      const comprimida = await _comprimirImagen(file);
-      const storageRef = ref(storage, `fotos-celulas/${data.celulaId}/${data.fecha}`);
-      await uploadBytes(storageRef, comprimida);
-      const fotoUrl = await getDownloadURL(storageRef);
-      data.fotoUrl = fotoUrl;
-      const reunionRef = await addDoc(collection(db, 'reuniones'), data);
-      const celulaNombre = state.misCelulas.find(c => c.id === data.celulaId)?.nombre || '';
-      await addDoc(collection(db, 'fotos'), {
-        reunionId: reunionRef.id,
-        celulaId: data.celulaId,
-        celulaNombre,
-        liderNombre: data.liderNombre,
-        fecha: data.fecha,
-        fotoUrl,
-        creadaEn: serverTimestamp()
-      });
-      showToast(`✔ Reunión guardada con foto — ${data.cantAsistentes} asistentes`, false);
-    } else {
-      await addDoc(collection(db, 'reuniones'), data);
-      showToast(`✔ Reunión guardada — ${data.cantAsistentes} asistentes`, false);
-    }
+    await addDoc(collection(db, 'reuniones'), data);
+    showToast(`✔ Reunión guardada — ${data.cantAsistentes} asistentes`, false);
     _limpiarFormReunion();
   } catch (e) { showToast('❌ Error al guardar', true); console.error(e); }
   if (btnGuardar) btnGuardar.disabled = false;
-};
-
-window.onFotoPreview = function(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('foto-preview').src = e.target.result;
-    document.getElementById('foto-preview-container').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-};
-
-window.quitarFoto = function() {
-  document.getElementById('foto-reunion-input').value = '';
-  document.getElementById('foto-preview-container').style.display = 'none';
-  document.getElementById('foto-preview').src = '';
 };
 
 function _limpiarFormReunion() {
@@ -133,30 +93,6 @@ function _limpiarFormReunion() {
     document.getElementById(id).value = '';
   });
   document.querySelectorAll('.check-row.checked').forEach(r => r.classList.remove('checked'));
-  window.quitarFoto();
-}
-
-async function _comprimirImagen(file) {
-  return new Promise(resolve => {
-    const maxPx = 1200;
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > maxPx || h > maxPx) {
-          if (w > h) { h = Math.round(h * maxPx / w); w = maxPx; }
-          else { w = Math.round(w * maxPx / h); h = maxPx; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.82);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 window.editarReunion = function(id) {
