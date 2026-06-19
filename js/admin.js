@@ -8,6 +8,7 @@ let _reunionesMes = [];
 let _celulaNames = {};
 let _celulaLideres = {};
 let _todasCelulas = [];
+let _celulasFiltradas = [];
 let _miemPorCel = {};
 let _celulasMostradas = 5;
 let _reunionesMesMostradas = 5;
@@ -53,24 +54,26 @@ export async function cargarPanelAdmin() {
 
     _todasCelulas = celSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     _todasCelulas.sort((a, b) => (b.creadaEn?.seconds ?? 0) - (a.creadaEn?.seconds ?? 0));
+    _celulasFiltradas = [..._todasCelulas];
     _miemPorCel = {};
     miemSnap.docs.forEach(d => {
       const cId = d.data().celulaId;
       _miemPorCel[cId] = (_miemPorCel[cId] || 0) + 1;
     });
     _celulasMostradas = 5;
+    document.getElementById('admin-filtro-lider').value = '';
     renderCelulasAdmin();
   } catch (e) { console.error(e); }
 }
 
 function renderCelulasAdmin() {
   const cont = document.getElementById('admin-celulas-list');
-  if (_todasCelulas.length === 0) {
-    cont.innerHTML = '<div class="empty-state"><div class="icon">📍</div><div>Aún no hay células creadas.</div></div>';
+  if (_celulasFiltradas.length === 0) {
+    cont.innerHTML = '<div class="empty-state"><div class="icon">📍</div><div>' + (_todasCelulas.length === 0 ? 'Aún no hay células creadas.' : 'Sin resultados') + '</div></div>';
     return;
   }
-  const visibles = _todasCelulas.slice(0, _celulasMostradas);
-  const restantes = _todasCelulas.length - _celulasMostradas;
+  const visibles = _celulasFiltradas.slice(0, _celulasMostradas);
+  const restantes = _celulasFiltradas.length - _celulasMostradas;
   cont.innerHTML = visibles.map(c => `
     <div class="item-card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
@@ -88,6 +91,20 @@ function renderCelulasAdmin() {
 
 window.cargarMasCelulas = function() {
   _celulasMostradas += 5;
+  renderCelulasAdmin();
+};
+
+window.filtrarCelulas = function() {
+  const filtro = document.getElementById('admin-filtro-lider').value.trim().toLowerCase();
+  if (!filtro) {
+    _celulasFiltradas = [..._todasCelulas];
+  } else {
+    _celulasFiltradas = _todasCelulas.filter(c => {
+      const liderNombre = (c.liderNombre || c.liderEmail || '').toLowerCase();
+      return liderNombre.includes(filtro);
+    });
+  }
+  _celulasMostradas = 5;
   renderCelulasAdmin();
 };
 
