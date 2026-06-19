@@ -42,7 +42,7 @@ export async function cargarPanelAdmin() {
         _reunionesMes.push({ id: d.id, ...r });
       }
     });
-    _reunionesMes.sort((a, b) => b.fecha.localeCompare(a.fecha));
+    _reunionesMes.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0));
     document.getElementById('admin-stat-reuniones').textContent = reuMes;
     document.getElementById('admin-stat-ofrenda').textContent = '$' + ofrMes.toLocaleString('es-AR');
     const acc = document.getElementById('admin-reuniones-mes-accordion');
