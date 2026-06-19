@@ -281,6 +281,58 @@ Cambios:
 
 ---
 
+## Sesión 2026-06-18
+
+### Cambios realizados (en producción)
+
+**Commit `a3b996b` — fix: ordenar reuniones del mes por timestamp (cuándo se cargó)**
+
+Bug reportado: cuando se creaba una reunión con fecha retroactiva (ej: reunión del 1 de junio, registrada hoy 18 de junio), no aparecía en los primeros lugares del acordeón "Reuniones (mes)" en el panel admin — quedaba al final porque el ordenamiento era por `fecha` (del evento), no por cuándo se creó.
+
+Fix en `js/admin.js`:
+- Línea 45: cambio de `_reunionesMes.sort((a, b) => b.fecha.localeCompare(a.fecha))` a `_reunionesMes.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0))`
+- Ahora las reuniones aparecen ordenadas por cuándo se cargaron (`timestamp`), no por la fecha del evento. Cuando alguien registra una reunión hoy (aunque sea de hace una semana), aparece en los primeros lugares.
+
+**Commit `e2968b6` — feat: agregar filtro de búsqueda de líderes en panel admin**
+
+Nuevo input de búsqueda en la sección "Todas las Células" que permite filtrar en tiempo real por nombre del líder. Cambios:
+
+`index.html`:
+- Input `id="admin-filtro-lider"` con placeholder "🔍 Buscar por nombre del líder..." arriba de `admin-celulas-list`. Llama a `filtrarCelulas()` en `onkeyup`.
+
+`js/admin.js`:
+- Nueva variable `_celulasFiltradas` que almacena las células filtradas.
+- Función `window.filtrarCelulas()`: lee el input, filtra `_todasCelulas` por nombre del líder (búsqueda case-insensitive con `.includes()`), resetea paginación a 5, y renderiza.
+- `renderCelulasAdmin()` ahora usa `_celulasFiltradas` en lugar de `_todasCelulas`.
+- Si el filtro está vacío, muestra todas. Si no hay coincidencias, muestra "Sin resultados".
+
+**Commit `d82e378` — polish: mejorar hover states y agregar backdrop blur a modales**
+
+Cambios visuales enfocados en feedback interactivo y experiencia premium:
+
+`styles.css`:
+- **.modal-overlay**: agregado `backdrop-filter: blur(8px)` + reducido opacity de 0.85 a 0.6 (efecto cristal frosted glass). Modal con `box-shadow: 0 20px 60px rgba(0,0,0,0.7)` para mayor separación.
+- **.btn-primary:hover**: `box-shadow: 0 6px 24px rgba(212,164,74,0.5)` + `transform: translateY(-2px)` (lift al pasar).
+- **.btn-secondary:hover**: background tintado dorado + sombra.
+- **.quick-btn:hover**: opacity aumentada, sombra, y lift.
+- **.nav-tab:hover**: hover state para tabs inactivos (border+color gold).
+- **.btn-danger, .btn-edit, .btn-delete**: mejores sombras y backgrounds en hover.
+- **.logout-btn:hover**: background tintado rojo.
+- Todas las transiciones en 0.2s `cubic-bezier` para fluidez.
+
+**Auditoría visual realizada (sin cambios):**
+Análisis completo del diseño actual identificó:
+- ✓ Paleta oscura + oro: excelente, profesional
+- ✓ Tipografía coherente: Cinzel (títulos), Lora (body), Share Tech Mono (técnico)
+- ✓ Contraste text/fondo: muy alto (~9:1), excelente accesibilidad
+- ⚠️ Hover states muy sutiles antes del polish
+- ⚠️ Falta `aria-label` en botones emoji, `prefers-reduced-motion` en animaciones
+- ⚠️ Modal backdrop sin blur
+
+**Nota:** Los cambios de polish (hover states + blur) fueron sutiles visualmente. El usuario reportó poca diferencia perceptible, probablemente debido a que son cambios de "micro-interacción" y requerirían hard reload del navegador para verlos sin caché.
+
+---
+
 ## Pendientes abiertos
 
 ### Mejora — código duplicado en eliminación de célula
