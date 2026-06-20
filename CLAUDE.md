@@ -331,6 +331,130 @@ Análisis completo del diseño actual identificó:
 
 **Nota:** Los cambios de polish (hover states + blur) fueron sutiles visualmente. El usuario reportó poca diferencia perceptible, probablemente debido a que son cambios de "micro-interacción" y requerirían hard reload del navegador para verlos sin caché.
 
+**CONTINUACIÓN — Cambios visuales agresivos (sin commitear aún):**
+
+Cambios en paleta y spacing para mayor impacto visual:
+
+`styles.css` — **Paleta más vibrante:**
+- `--gold: #d4a44a → #f0c000` (dorado brillante)
+- `--gold-light: #ffd97a → #ffeb3b` (dorado claro luminoso)
+- `--green: #7cba3f → #9ccc65` (verde saturado)
+- `--red: #c44545 → #ef5350` (rojo vivo)
+- `--text: #f5e8c8 → #f5f5f5` (blanco casi puro, mejor contraste)
+- `--muted: #8a7f5f → #b0b0b0` (gris neutro)
+
+`styles.css` — **Spacing aumentado (+40-50%):**
+- `.section`: `margin-bottom: 14px → 20px`
+- `.section-header`: `padding: 12px 16px → 16px 20px`; h3 `1rem → 1.1rem`
+- `.section-body`: `padding: 14px → 18px`
+- `.stats-grid`: `gap: 10px → 14px`, `margin-bottom: 14px → 20px`
+- `.stat-card`: `padding: 14px → 18px`; `.num: 1.8rem → 2rem`
+- `.quick-btn`: `padding: 18px 12px → 24px 16px`; `.icon: 1.8rem → 2rem`
+- `.welcome-card`: `padding: 20px → 28px`; h2 `1.4rem → 1.6rem`
+- `.container`: `padding: 14px → 18px`
+- `.field-row`: `gap: 10px → 14px`; `.field input padding: 11px → 13px`
+- `.btn-primary`: `padding: 14px → 16px`; `font-size: 1rem → 1.05rem`
+
+`index.html` — **Login: Partículas flotantes animadas:**
+- Agregadas 15 partículas doradas que flotan suavemente en el fondo del login
+- Cada una con delays y duraciones aleatorias para efecto orgánico
+- `styles.css`: `.particle` — 10px, rgba(240,192,0,0.5), glow dorado, animación `float` lineal
+- Keyframe `float`: 0% opacity 0 → 8% opacity 0.8 → 92% opacity 0.8 → 100% opacity 0
+- Movimiento: `translateY(-120vh) translateX(150px)`
+
+**BUG DESCUBIERTO — Carrusel de fotos aparece aunque fue sacada:**
+
+La feature de fotos está pausada desde sesión 2026-06-10, pero la UI de subida fue removida sin remover el código de carga.
+
+Causa: `app.js` líneas 10 y 66 todavía llaman a `cargarCarrusel()` de `fotos.js`:
+- Línea 10: `import { cargarCarrusel } from './fotos.js';`
+- Línea 66: `cargarCarrusel();` en función `mostrarApp()`
+
+Resultado: El carrusel carga fotos de Firestore automáticamente, apareciendo en producción aunque no hay UI para subirlas.
+
+**Soluciones propuestas (pendiente de decisión del usuario):**
+1. Remover líneas 10 + 66 de `app.js` (pausar feature completamente)
+2. Comentar esas líneas (pausar temporalmente, retomar fácil)
+3. Eliminar `fotos.js` del working tree (limpiar completamente)
+
+**Estado actual del working tree:**
+- ✅ Cambios de paleta + spacing listos (sin commitear)
+- ✅ Partículas en login listas (sin commitear)
+- ❌ `fotos.js` presente, activo en `app.js` (problema)
+- ❌ `storage.rules` presente (sin usar)
+- ❌ Cambios pendientes en `firebase.json`, `firestore.rules`
+
+**Próximos pasos:**
+1. Decidir qué hacer con `fotos.js` (remover imports, comentar, o eliminar)
+2. Commitear cambios visuales (paleta + spacing + login particles)
+3. Pushear a producción
+
+---
+
+## Sesión 2026-06-20
+
+### Cambios realizados (todos en producción)
+
+**Commit `6393f69` — feat: agregar animaciones y sistema de actualización de versión**
+
+Animaciones profesionales con propósito:
+- `styles.css`: Nuevas variables CSS `--ease-out-quart` y `--ease-out-quint` para easing consistente
+- Keyframes: `fadeInUp`, `fadeIn`, `slideInLeft`, `slideInDown`, `buttonPress` con duraciones y easing optimizados
+- **Accesibilidad**: `@media (prefers-reduced-motion: reduce)` aplicado a TODAS las animaciones
+
+**Por capa de interacción:**
+
+1. **Hero** — `.welcome-card`: fade-in + rise suave (500ms, ease-out-quart)
+2. **Feedback** — Botones (`.btn-primary`, `.btn-secondary`, `.btn-danger`): scale press (0.98→1, 100ms) en `:active`
+3. **Form state** — `.field input:focus`, `.field textarea:focus`: border glow (3px rgba gold) + transición suave (150ms)
+4. **Panel transitions** — `.panel.active`: fade (200ms) cuando se muestran entre tabs
+5. **Acordeones** — `#admin-reuniones-mes-accordion`, `[id^="obs-*"]`: expand/collapse con `max-height` + opacity (250ms)
+6. **Modal entrance** — `.modal-overlay.show`: backdrop fade (0→0.6) + blur (0→8px) + modal scale (0.95→1, 300ms)
+
+Cambios en JavaScript:
+- `admin.js`: `toggleReunionesMes()` y `toggleObsAdmin()` usan `classList.add/remove('open')` en lugar de `style.display`
+- `miembros.js`: `toggleObsMiembro()` usa clase `open` con transición CSS
+- `app.js`: removidos imports de `cargarCarrusel` (feature de fotos pausada)
+- `index.html`: removido contenedor `#carrusel-container` y `display:none` inline en acordeones
+
+**Commit `9936775` — bump: version 1.0.1 (notificar usuarios)**
+
+Sistema de actualización automática para PWA:
+- Nuevo archivo `version.json` en raíz con número de versión y timestamp
+- `app.js`: función `_checkearActualizacion()` chequea `/version.json` al iniciar (con `?t=Date.now()` para evitar caché)
+- Compara con `localStorage.appVersion` — si hay cambios, llama `_mostrarBannerActualizacion()`
+- Banner dorado en top con icono ✨, mensaje "Nueva versión disponible" y botón "Actualizar"
+- Al hacer click: `localStorage.setItem('appVersion', nuevaVersion)` + `window.location.reload()`
+- En la siguiente carga, localStorage coincide con servidor → no muestra banner (desaparece automáticamente)
+- Banner auto-desaparece en 10 segundos si el usuario lo ignora
+
+**Para deployar cambios futuros:**
+1. Hacer `git push origin main` con los cambios de código
+2. Actualizar `version` en `version.json` (ej: `1.0.1` → `1.0.2`)
+3. Hacer `git push origin main` nuevamente
+4. Usuarios con la app abierta verán el banner automáticamente
+
+**Removed (limpieza):**
+- `app.js`: línea 10 `import { cargarCarrusel }...` eliminada
+- `app.js`: línea 66 `cargarCarrusel()` eliminada
+- `index.html`: contenedor `#carrusel-container` eliminado
+- `admin.js`: línea 50 `acc.style.display = 'none'` reemplazado por `acc.classList.remove('open')`
+- `miembros.js`: línea 38 `style="display:none"` removido de observaciones
+- `admin.js`: línea 136 `style="display:none"` removido de observaciones
+
+**Notas técnicas:**
+- Las animaciones usan transform + opacity (rendimiento 60fps)
+- Modales usan backdrop-filter blur para efecto premium (ya estaba, mejorado)
+- Acordeones usan `display:none/block` con transición opacity (CSS no anima display, pero opacity + max-height hacen el efecto)
+- `prefers-reduced-motion` reduce duración a 0.01ms — respeta a usuarios sensibles a movimiento
+
+**Estado actual:**
+- ✅ Todas las animaciones funcionan en producción
+- ✅ Sistema de versión activo y testeable (cambiar `version.json` muestra banner)
+- ✅ Feature de fotos completamente removida (no hay UI ni lógica)
+- ✅ Responsive en móvil y desktop
+- ✅ Accesibilidad asegurada
+
 ---
 
 ## Pendientes abiertos
