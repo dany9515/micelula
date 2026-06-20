@@ -35,7 +35,7 @@ export function renderMiembros() {
           <button class="btn-danger" data-id="${m.id}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
         </div>
       </div>
-      ${m.obs ? `<div id="obs-miem-${m.id}" style="display:none;margin-top:8px;padding:8px 10px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.9rem">"${escHtml(m.obs)}"</div>` : ''}
+      ${m.obs ? `<div id="obs-miem-${m.id}" style="margin-top:8px;padding:8px 10px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.9rem">"${escHtml(m.obs)}"</div>` : ''}
     </div>
   `).join('');
 }
@@ -112,7 +112,7 @@ window.eliminarMiembroBtn = function(btn) {
 window.toggleObsMiembro = function(id) {
   const el = document.getElementById('obs-miem-' + id);
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  el.classList.toggle('open');
 };
 
 window.eliminarMiembro = async function(id, nombre) {

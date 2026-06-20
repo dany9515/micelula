@@ -59,6 +59,24 @@
 
 <!-- LOGIN -->
 <div class="login-screen" id="login-screen">
+  <!-- Partículas flotantes de fondo -->
+  <div class="login-particles">
+    <div class="particle" style="left:5%;top:10%;animation-delay:0s;animation-duration:8s;"></div>
+    <div class="particle" style="left:15%;top:25%;animation-delay:0.5s;animation-duration:9s;"></div>
+    <div class="particle" style="left:25%;top:15%;animation-delay:1s;animation-duration:10s;"></div>
+    <div class="particle" style="left:70%;top:20%;animation-delay:1.5s;animation-duration:8.5s;"></div>
+    <div class="particle" style="left:85%;top:30%;animation-delay:2s;animation-duration:11s;"></div>
+    <div class="particle" style="left:92%;top:10%;animation-delay:0.8s;animation-duration:9.5s;"></div>
+    <div class="particle" style="left:8%;top:50%;animation-delay:2s;animation-duration:9s;"></div>
+    <div class="particle" style="left:35%;top:60%;animation-delay:1.2s;animation-duration:10.5s;"></div>
+    <div class="particle" style="left:80%;top:70%;animation-delay:3s;animation-duration:8.8s;"></div>
+    <div class="particle" style="left:20%;top:75%;animation-delay:0.3s;animation-duration:11s;"></div>
+    <div class="particle" style="left:60%;top:85%;animation-delay:1.8s;animation-duration:9.2s;"></div>
+    <div class="particle" style="left:88%;top:65%;animation-delay:2.5s;animation-duration:10.2s;"></div>
+    <div class="particle" style="left:45%;top:35%;animation-delay:0.7s;animation-duration:8.3s;"></div>
+    <div class="particle" style="left:12%;top:70%;animation-delay:2.2s;animation-duration:11.5s;"></div>
+    <div class="particle" style="left:75%;top:50%;animation-delay:1.1s;animation-duration:9.8s;"></div>
+  </div>
   <svg class="login-logo-svg"><use href="#logoCFCPN"/></svg>
   <h1 class="login-title">Mi Célula</h1>
   <div class="login-sub">C.F.C.P.N.</div>
@@ -195,12 +213,6 @@
         <div class="stat-card"><div class="num" id="stat-miembros">—</div><div class="lbl">Miembros activos</div></div>
         <div class="stat-card"><div class="num" id="stat-reuniones">—</div><div class="lbl">Reuniones del mes</div></div>
       </div>
-      <div id="carrusel-container" style="margin-bottom:14px;display:none">
-        <div class="section">
-          <div class="section-header"><h3>📸 Fotos de reuniones</h3></div>
-          <div class="section-body" style="padding:8px 0"><div id="carrusel-fotos"></div></div>
-        </div>
-      </div>
       <div class="quick-actions">
         <div class="quick-btn" onclick="showPanel('reunion',document.querySelectorAll('.nav-tab')[1])"><div class="icon">📋</div><div class="lbl">Nueva Reunión</div></div>
         <div class="quick-btn" onclick="showPanel('miembros',document.querySelectorAll('.nav-tab')[2])"><div class="icon">👥</div><div class="lbl">Mis Miembros</div></div>
@@ -282,7 +294,7 @@
             <div class="stat-card" onclick="toggleReunionesMes()" style="cursor:pointer;user-select:none"><div class="num" id="admin-stat-reuniones">—</div><div class="lbl" id="admin-stat-reuniones-lbl">Reuniones (mes) ▾</div></div>
             <div class="stat-card"><div class="num" id="admin-stat-ofrenda">$0</div><div class="lbl">Ofrendas (mes)</div></div>
           </div>
-          <div id="admin-reuniones-mes-accordion" style="display:none;margin-top:8px"></div>
+          <div id="admin-reuniones-mes-accordion"></div>
           <button class="btn-primary" onclick="abrirNuevaCelula()" style="margin-top:14px;display:none">➕ Crear Célula y Asignar Líder</button>
         </div>
       </div>

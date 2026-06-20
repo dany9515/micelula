@@ -47,7 +47,7 @@ export async function cargarPanelAdmin() {
     document.getElementById('admin-stat-reuniones').textContent = reuMes;
     document.getElementById('admin-stat-ofrenda').textContent = '$' + ofrMes.toLocaleString('es-AR');
     const acc = document.getElementById('admin-reuniones-mes-accordion');
-    if (acc) { acc.style.display = 'none'; acc.innerHTML = ''; }
+    if (acc) { acc.classList.remove('open'); acc.innerHTML = ''; }
     const lbl = document.getElementById('admin-stat-reuniones-lbl');
     if (lbl) lbl.textContent = 'Reuniones (mes) ▾';
     _reunionesMesMostradas = 5;
@@ -133,7 +133,7 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
                   <span style="color:var(--text)">${escHtml(m.nombre)}</span>
                   ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
                 </div>
-                ${m.obs ? `<div id="obs-admin-${m.id}" style="display:none;margin-top:6px;padding:6px 8px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.85rem">"${escHtml(m.obs)}"</div>` : ''}
+                ${m.obs ? `<div id="obs-admin-${m.id}" style="margin-top:6px;padding:6px 8px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.85rem">"${escHtml(m.obs)}"</div>` : ''}
               </div>`).join('')}
         </div>
       </div>
@@ -166,7 +166,7 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
 window.toggleObsAdmin = function(id) {
   const el = document.getElementById('obs-admin-' + id);
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  el.classList.toggle('open');
 };
 
 window.cerrarDetalleCelula = function() {
@@ -237,15 +237,15 @@ function renderReunionesMesAccordion() {
 window.toggleReunionesMes = function() {
   const acc = document.getElementById('admin-reuniones-mes-accordion');
   const lbl = document.getElementById('admin-stat-reuniones-lbl');
-  if (acc.style.display !== 'none') {
-    acc.style.display = 'none';
+  if (acc.classList.contains('open')) {
+    acc.classList.remove('open');
     lbl.textContent = 'Reuniones (mes) ▾';
     _reunionesMesMostradas = 5;
     return;
   }
   lbl.textContent = 'Reuniones (mes) ▴';
   renderReunionesMesAccordion();
-  acc.style.display = 'block';
+  acc.classList.add('open');
 };
 
 window.cargarMasReunionesMes = function() {

@@ -65,6 +65,49 @@ async function mostrarApp() {
   const now = new Date();
   document.getElementById('reu-fecha').value = now.toISOString().split('T')[0];
   document.getElementById('reu-hora').value = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+  _checkearActualizacion();
+}
+
+async function _checkearActualizacion() {
+  try {
+    const resp = await fetch('/version.json?t=' + Date.now());
+    if (!resp.ok) return;
+    const data = await resp.json();
+    const versionActual = localStorage.getItem('appVersion');
+    if (versionActual && versionActual !== data.version) {
+      _mostrarBannerActualizacion(data.version);
+    }
+    localStorage.setItem('appVersion', data.version);
+  } catch (e) { console.log('No se pudo chequear versión'); }
+}
+
+function _mostrarBannerActualizacion(nuevaVersion) {
+  const banner = document.createElement('div');
+  banner.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #f0c000, #ffeb3b);
+    color: #1a1409;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    z-index: 9999;
+    font-family: Cinzel, serif;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    animation: slideInDown 0.3s cubic-bezier(0.22,1,0.36,1);
+  `;
+  banner.innerHTML = `
+    <span style="flex:1">✨ Nueva versión disponible</span>
+    <button onclick="localStorage.setItem('appVersion','${nuevaVersion}');window.location.reload()" style="padding:8px 16px;background:#1a1409;color:#f0c000;border:none;border-radius:6px;cursor:pointer;font-family:Cinzel,serif;font-weight:700;letter-spacing:1px;transition:all 0.2s">Actualizar</button>
+    <button onclick="this.parentElement.remove()" style="padding:8px 12px;background:transparent;color:#1a1409;border:none;cursor:pointer;font-size:1.2rem">✕</button>
+  `;
+  document.body.appendChild(banner);
+  setTimeout(() => banner.remove(), 10000);
 }
 
 window.showPanel = function(id, btn, fromSidebar) {
