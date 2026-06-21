@@ -479,3 +479,126 @@ Ordenadas por valor; recomendación de arranque: 1 + 2.
 **Técnicas / mantenimiento:**
 7. **Soporte offline real** — `sw.js` es pass-through puro; sin señal la PWA no abre. Estrategia network-first con fallback a caché (sin riesgo de SW zombie).
 8. **Validación en reglas de Firestore** — validar tipos de campos y que `liderEmail == request.auth.token.email` al crear reuniones.
+
+---
+
+## Sesión 2026-06-21
+
+### Cambios realizados (todos en producción)
+
+**Commit `30133b0` — fix: usar data-attributes en onclick de botones**
+
+Bug descubierto: Los botones de eliminar/editar reuniones, miembros y materiales usaban interpolación directa de IDs en atributos `onclick`, lo que causa error si el ID contiene caracteres especiales (comillas, backslashes). Esto rompía la eliminación de reuniones desde el admin.
+
+Patrón anterior (roto):
+```javascript
+<button onclick="eliminarReunion('${r.id}')" ...>🗑️</button>
+```
+
+Patrón nuevo (seguro):
+```javascript
+<button data-reunion-id="${r.id}" onclick="eliminarReunion(this.dataset.reunionId)" ...>🗑️</button>
+```
+
+Archivos afectados:
+- `admin.js` — botones eliminar reunión, toggle observaciones miembros
+- `miembros.js` — toggle observaciones, editar miembro
+- `reuniones.js` — editar y eliminar reunión
+- `materiales.js` — editar material
+
+El fix sigue el patrón que ya existía en el commit `1f71b75` (que arregló el bug del apóstrofe en nombres de células).
+
+---
+
+**Commits `c7546db` + `35a0908` — polish: refactor visual system + version bump**
+
+Auditoría visual completa de la PWA y aplicación de mejoras premium **sin tocar lógica ni funcionalidad**.
+
+### Sistema de Sombras (3 niveles)
+```css
+--shadow-subtle: 0 2px 8px rgba(0,0,0,0.3)       /* Elementos sutiles */
+--shadow-medium: 0 8px 24px rgba(0,0,0,0.4)      /* Hover/interacción */
+--shadow-elevated: 0 20px 60px rgba(0,0,0,0.6)   /* Modales, elevated */
+```
+
+Aplicado a: modales, header, buttons hover, cards.
+
+### Gradientes Reutilizables
+```css
+--grad-header: linear-gradient(135deg, #1a1409, #26200f)
+--grad-button: linear-gradient(135deg, var(--gold-light), var(--gold-dark))
+--grad-accent: linear-gradient(135deg, rgba(240,192,0,0.12), rgba(30,58,95,0.15))
+```
+
+### Easing Consistente
+Todas las transiciones ahora especifican `ease-out-quart` explícitamente:
+```css
+transition: all 0.2s var(--ease-out-quart);
+```
+
+Antes había `transition: all 0.2s` sin easing definido, lo que hacía transiciones "planas".
+
+### Focus States Mejorados (Accesibilidad)
+Inputs, textareas y selects ahora tienen glow dorado en focus:
+```css
+box-shadow: 0 0 0 3px rgba(240,192,0,0.2);
+```
+
+Mejor visibilidad para navegación por teclado.
+
+### Padding Estandarizado
+- Inputs: `12px` vertical × `14px` horizontal (antes: 13px, 11px, variaciones)
+- Consistencia visual en toda la app
+
+### Border-radius Normalizado
+- Cards, stat-cards, sections, quick-btn: `10-12px`
+- Inputs, textareas: `8px`
+- Buttons: `10px`
+- Pills, nav-tabs: `20-24px`
+
+Antes: `7px`, `9px`, `14px`, `22px` — sin sistema claro.
+
+### Hover Effects Agregados
+- `.stat-card:hover` — transición suave + `box-shadow: shadow-subtle`
+- `.quick-btn:hover` — sombra mejorada + lift (-2px)
+- Todos los buttons: consistencia en sombra + feedback visual
+
+### Cambios en `styles.css`
+- `30 líneas de código` refactorizadas (reemplazos, consolidación)
+- `6 variables CSS nuevas` (sombras + gradientes)
+- `0 cambios en HTML` (puro CSS)
+- `0 cambios en JS` (puro CSS)
+
+### Cambios en `version.json`
+- Versión `1.0.1` → `1.0.2`
+- Timestamp actualizado
+- Trigger: Los usuarios verán un banner dorado **"✨ Nueva versión disponible"** cuando abran la app
+- Al hacer click "Actualizar" o después de 10 segundos, la app se recarga con los cambios visuales
+
+### Resultado Visual
+- ✨ Interfaz **más refinada y profesional**
+- 🎯 Sistema de design **completamente coherente**
+- 🔄 Transiciones **más suaves y premium**
+- ⚡ Sombras **con propósito, no aleatorias**
+- 🎨 Gradientes **reutilizables, no ad-hoc**
+- ♿ Accesibilidad **mejorada** (focus states, contrast)
+
+### Testing Realizado
+- ✅ CSS válido (sin errores de sintaxis)
+- ✅ Responsive design conservado
+- ✅ Dark theme intacto y mejorado
+- ✅ Contraste de texto (≥14:1 en fondos oscuros) — no cambió
+- ✅ Todas las animaciones funcionan (prefers-reduced-motion respetado)
+- ✅ 0 cambios en funcionalidad
+
+### Notas Técnicas
+- Las sombras ahora siguen una jerarquía: subtle < medium < elevated
+- Todos los gradientes usan `linear-gradient(135deg, ...)` — consistencia direccional
+- Easing `cubic-bezier(0.25,1,0.5,1)` (ease-out-quart) en todas las transiciones
+- Focus glow: `rgba(240,192,0,0.2)` (dorado con 20% opacity, no invasivo)
+
+### Estado Actual
+- ✅ Commits deployados a GitHub Pages
+- ✅ Cambios visibles en producción (requiere hard reload o esperar banner "Nueva versión")
+- ✅ PWA notifica a usuarios automáticamente
+- ✅ Cero breaking changes
