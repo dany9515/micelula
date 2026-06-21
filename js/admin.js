@@ -128,7 +128,7 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
         <div class="section-body">
           ${miembros.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin miembros registrados</div>' :
             miembros.map(m => `
-              <div style="padding:8px 0;border-bottom:0.5px solid var(--border);${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsAdmin('${m.id}')">
+              <div data-miembro-id="${m.id}" style="padding:8px 0;border-bottom:0.5px solid var(--border);${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsAdmin(this.dataset.miembroId)">
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <span style="color:var(--text)">${escHtml(m.nombre)}</span>
                   ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
@@ -143,7 +143,7 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
           ${reuniones.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin reuniones registradas</div>' :
             reuniones.slice(0, 3).map(r => `
               <div class="item-card" style="margin-bottom:10px;position:relative">
-                <button onclick="eliminarReunionAdmin('${r.id}')" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
+                <button data-reunion-id="${r.id}" onclick="eliminarReunionAdmin(this.dataset.reunionId)" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
                 <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px;padding-right:40px">
                   📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + escHtml(r.hora) + 'hs' : ''}
                 </div>

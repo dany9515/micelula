@@ -22,7 +22,7 @@ export function renderMiembros() {
     return;
   }
   cont.innerHTML = state.miembrosCache.map(m => `
-    <div class="item-card" style="${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsMiembro('${m.id}')">
+    <div class="item-card" data-miembro-id="${m.id}" style="${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsMiembro(this.dataset.miembroId)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
           <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(m.nombre)}</div>
@@ -31,7 +31,7 @@ export function renderMiembros() {
           ${m.ingreso ? `<div class="item-info">📅 Ingreso: ${formatFecha(m.ingreso)}</div>` : ''}
         </div>
         <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-          <button class="btn-danger" onclick="editarMiembro('${m.id}')" style="border-color:var(--gold);color:var(--gold)">✏️</button>
+          <button class="btn-danger" data-miembro-id="${m.id}" onclick="editarMiembro(this.dataset.miembroId)" style="border-color:var(--gold);color:var(--gold)">✏️</button>
           <button class="btn-danger" data-id="${m.id}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
         </div>
       </div>

@@ -39,8 +39,8 @@ export function renderHistorial() {
         </div>
         <div style="display:flex;align-items:center;gap:6px">
           <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
-          <button class="btn-danger" onclick="editarReunion('${r.id}')" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
-          <button class="btn-danger" onclick="eliminarReunion('${r.id}')" style="padding:4px 10px">🗑️</button>
+          <button class="btn-danger" data-reunion-id="${r.id}" onclick="editarReunion(this.dataset.reunionId)" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
+          <button class="btn-danger" data-reunion-id="${r.id}" onclick="eliminarReunion(this.dataset.reunionId)" style="padding:4px 10px">🗑️</button>
         </div>
       </div>
       ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
