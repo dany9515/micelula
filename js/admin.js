@@ -299,11 +299,6 @@ window.cerrarReportes = function() {
 window.descargarReporte = async function(mes, año) {
   showToast('⏳ Generando reporte...', false);
   try {
-    if (typeof jsPDF === 'undefined') {
-      showToast('⏳ Cargando librería... intenta de nuevo', false);
-      setTimeout(() => window.descargarReporte(mes, año), 2000);
-      return;
-    }
     const celSnap = await getDocs(collection(db, 'celulas'));
     const totalCelulas = celSnap.size;
     const miemSnap = await getDocs(collection(db, 'miembros'));
