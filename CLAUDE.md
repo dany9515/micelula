@@ -602,3 +602,83 @@ Antes: `7px`, `9px`, `14px`, `22px` — sin sistema claro.
 - ✅ Cambios visibles en producción (requiere hard reload o esperar banner "Nueva versión")
 - ✅ PWA notifica a usuarios automáticamente
 - ✅ Cero breaking changes
+
+---
+
+## Sesión 2026-07-02
+
+### Cambios realizados (todos en producción)
+
+**Commits `80fa79d` + `49282f0` + `30d766c` + `6e42ca5` — feat: sistema de reportes mensuales descargables en PDF**
+
+Feature principal: panel admin puede descargar reportes mensuales con 4 indicadores.
+
+**Commits en orden:**
+
+1. **`80fa79d` — feat: reportes mensuales descargables para admin**
+   - Nuevo botón "📊 Descargar Reporte Mensual" en panel admin (sección "Reportes Mensuales")
+   - Modal muestra últimos 5 meses
+   - Cada mes tiene botón "Descargar" que genera CSV con datos reales de Firestore:
+     - Células activas (total)
+     - Miembros activos (total)
+     - Miembros nuevos ese mes (según fecha `ingreso`)
+     - Ofrenda total del mes (suma de reuniones)
+
+2. **`49282f0` — feat: generar reportes en PDF en lugar de CSV**
+   - Cambió de CSV a PDF con jsPDF + jsPDF-autoTable
+   - Diseño profesional con logo, colores dorados, tabla formateada
+   - PDF se descarga con nombre descriptivo: `reporte_06_2026.pdf`
+
+3. **`30d766c` — fix: cargar jsPDF antes del módulo app.js**
+   - Scripts de jsPDF movidos para cargar ANTES de app.js
+   - Evita `ReferenceError: jsPDF is not defined`
+
+4. **`6e42ca5` — chore: bump version 1.0.3**
+   - Aumentó versión en `version.json` para triggerear banner "Nueva versión disponible"
+   - Usuarios con PWA instalada reciben notificación automática
+
+**Commits `e92d33d` + `936b134` — troubleshooting CDN y Service Worker**
+
+5. **`e92d33d` — fix: esperar a que jsPDF cargue antes de generar PDF**
+   - Agregó fallback: si jsPDF no está disponible, intenta de nuevo en 2 segundos
+   - Loop de reintento automático
+
+6. **`936b134` — fix: cambiar jsPDF a CDN más confiable (unpkg)**
+   - Cambió de cdnjs a unpkg por problemas de carga
+   - unpkg más confiable para librerías ES6
+
+7. **`f561015` — fix: manejar errores de network en Service Worker**
+   - Arregló `sw.js` para manejar fetch errors sin causar unhandled rejections
+   - `.catch(() => new Response('Offline', { status: 503 }))`
+   - Evita que beacon de Cloudflare Insights rompa toda la app
+
+**Commit `af207c6` — fix: usar html2pdf en lugar de jsPDF**
+
+8. **Cambio definitivo a html2pdf (SOLUCIÓN FINAL)**
+   - jsPDF + unpkg seguía teniendo problemas de carga desde CDN
+   - html2pdf es mucho más simple: genera PDF directamente desde HTML
+   - No requiere librerías complejas ni configuración de autoTable
+   - Funciona de primera, sin loops de reintento
+   - Script único: `https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js`
+
+**Commit `1239077` — feat: filtrar meses sin datos en reportes**
+
+9. **Filtrado de meses vacíos**
+   - Modal de reportes ahora solo muestra meses con reuniones registradas
+   - Busca hasta 12 meses atrás pero lista solo los que tienen datos
+   - Si no hay reportes, muestra "Sin reportes disponibles"
+   - `abrirReportes()` ahora es `async` y consulta reuniones para filtrar
+
+### Lecciones aprendidas
+
+- **No complicar:** La solución más simple es casi siempre la correcta. jsPDF fue un desvío; html2pdf funcionó directo.
+- **CDN confiabilidad:** unpkg es mejor que cdnjs en algunos casos, pero html2pdf desde cualquier CDN es más confiable que jsPDF.
+- **Service Worker es crítico:** Errores no manejados en el SW rompen toda la PWA. Siempre agregar `.catch()`.
+
+### Estado actual
+
+- ✅ Reportes PDF funcionando en producción
+- ✅ Filtrado de meses sin datos
+- ✅ Sistema de versiones triggerando banner automático
+- ✅ Service Worker robusto ante errores de red
+- ✅ Sin dependencias complejas
