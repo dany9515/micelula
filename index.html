@@ -299,6 +299,12 @@
         </div>
       </div>
       <div class="section">
+        <div class="section-header"><h3>📊 Reportes Mensuales</h3></div>
+        <div class="section-body">
+          <button class="btn-primary" onclick="abrirReportes()" style="width:100%">📊 Descargar Reporte Mensual</button>
+        </div>
+      </div>
+      <div class="section">
         <div class="section-header"><h3>📍 Todas las Células</h3></div>
         <div class="section-body">
           <input type="text" id="admin-filtro-lider" placeholder="🔍 Buscar por nombre del líder..." style="width:100%;padding:10px 12px;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:0.95rem;outline:none" onkeyup="filtrarCelulas()">
@@ -431,6 +437,18 @@
       </div>
       <button class="btn-primary" onclick="guardarEdicionReunion()">💾 Guardar Cambios</button>
       <button class="btn-secondary" onclick="cerrarEditarReunion()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REPORTES -->
+<div class="modal-overlay" id="modal-reportes">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-header"><h2>📊 Reportes Mensuales</h2><button class="modal-close" onclick="cerrarReportes()">✕</button></div>
+    <div class="modal-body">
+      <div id="reportes-lista" style="display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;color:var(--muted);padding:20px">⏳ Cargando meses...</div>
+      </div>
     </div>
   </div>
 </div>

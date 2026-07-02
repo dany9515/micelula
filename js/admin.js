@@ -268,3 +268,90 @@ window.guardarCelula = async function() {
     cargarPanelAdmin();
   } catch (e) { showToast('❌ Error', true); console.error(e); }
 };
+
+window.abrirReportes = function() {
+  const modal = document.getElementById('modal-reportes');
+  const lista = document.getElementById('reportes-lista');
+  modal.classList.add('show');
+  const meses = [];
+  const hoy = new Date();
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
+    meses.push(d);
+  }
+  lista.innerHTML = meses.map(m => {
+    const mes = m.getMonth();
+    const año = m.getFullYear();
+    const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(m);
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(212,164,74,0.08);border:1px solid var(--border);border-radius:8px">
+        <span style="color:var(--text);font-family:var(--font-body);text-transform:capitalize">${nombreMes}</span>
+        <button class="btn-primary" onclick="descargarReporte(${mes}, ${año})" style="padding:6px 14px;font-size:0.85rem">📥 Descargar</button>
+      </div>
+    `;
+  }).join('');
+};
+
+window.cerrarReportes = function() {
+  document.getElementById('modal-reportes').classList.remove('show');
+};
+
+window.descargarReporte = async function(mes, año) {
+  showToast('⏳ Generando reporte...', false);
+  try {
+    const inicioMes = new Date(año, mes, 1);
+    const inicioProxMes = new Date(año, mes + 1, 1);
+    const celSnap = await getDocs(collection(db, 'celulas'));
+    const totalCelulas = celSnap.size;
+    const miemSnap = await getDocs(collection(db, 'miembros'));
+    const totalMiembros = miemSnap.size;
+    let miembrosNuevos = 0;
+    miemSnap.docs.forEach(d => {
+      const m = d.data();
+      if (m.ingreso) {
+        const [iy, im, id] = m.ingreso.split('-').map(Number);
+        if (iy === año && im === (mes + 1)) miembrosNuevos++;
+      }
+    });
+    const reuSnap = await getDocs(collection(db, 'reuniones'));
+    let ofrenda = 0;
+    reuSnap.docs.forEach(d => {
+      const r = d.data();
+      if (r.fecha) {
+        const [ry, rm, rd] = r.fecha.split('-').map(Number);
+        if (ry === año && rm === (mes + 1)) ofrenda += r.ofrenda || 0;
+      }
+    });
+    const csv = generarCSV(año, mes, totalCelulas, totalMiembros, miembrosNuevos, ofrenda);
+    descargarCSV(csv, año, mes + 1);
+    showToast('✔ Reporte descargado', false);
+  } catch (e) {
+    showToast('❌ Error al generar reporte', true);
+    console.error(e);
+  }
+};
+
+function generarCSV(año, mes, celulas, miembros, nuevos, ofrenda) {
+  const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long' }).format(new Date(año, mes, 1));
+  const lineas = [
+    'Reporte Mensual — Mi Célula',
+    '',
+    `Período,${nombreMes.toUpperCase()} ${año}`,
+    '',
+    'Indicador,Cantidad',
+    `Células activas,${celulas}`,
+    `Miembros activos,${miembros}`,
+    `Miembros nuevos,${nuevos}`,
+    `Ofrenda del mes,$${ofrenda.toLocaleString('es-AR')}`
+  ];
+  return lineas.join('\n');
+}
+
+function descargarCSV(csv, año, mes) {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `reporte_${mes.toString().padStart(2, '0')}_${año}.csv`);
+  link.click();
+}
