@@ -331,66 +331,55 @@ window.descargarReporte = async function(mes, año) {
 
 function generarPDF(año, mes, celulas, miembros, nuevos, ofrenda) {
   const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long' }).format(new Date(año, mes, 1));
-  const doc = new jsPDF();
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-
-  doc.setFont('Cinzel', 'bold');
-  doc.setFontSize(20);
-  doc.setTextColor(212, 164, 74);
-  doc.text('Mi Célula', pageWidth / 2, 20, { align: 'center' });
-
-  doc.setFont('Lora', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(140, 140, 140);
-  doc.text('Reporte Mensual — C.F.C.P.N.', pageWidth / 2, 28, { align: 'center' });
-
-  doc.setFontSize(11);
-  doc.setTextColor(212, 164, 74);
-  doc.setFont('Cinzel', 'normal');
-  doc.text(`${nombreMes.toUpperCase()} ${año}`, pageWidth / 2, 38, { align: 'center' });
-
-  doc.autoTable({
-    head: [['Indicador', 'Cantidad']],
-    body: [
-      ['Células activas', celulas.toString()],
-      ['Miembros activos', miembros.toString()],
-      ['Miembros nuevos', nuevos.toString()],
-      ['Ofrenda del mes', `$${ofrenda.toLocaleString('es-AR')}`]
-    ],
-    startY: 50,
-    styles: {
-      font: 'Lora',
-      fontSize: 11,
-      cellPadding: 8,
-      textColor: [245, 232, 200],
-      lineColor: [212, 164, 74],
-      lineWidth: 0.5
-    },
-    headStyles: {
-      fillColor: [42, 37, 25],
-      textColor: [212, 164, 74],
-      fontStyle: 'bold',
-      font: 'Cinzel'
-    },
-    bodyStyles: {
-      fillColor: [30, 25, 15]
-    },
-    alternateRowStyles: {
-      fillColor: [38, 32, 20]
-    }
-  });
-
   const fechaGen = new Intl.DateTimeFormat('es-AR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date());
-  doc.setFont('Lora', 'italic');
-  doc.setFontSize(8);
-  doc.setTextColor(140, 140, 140);
-  doc.text(`Generado: ${fechaGen}`, 14, pageHeight - 10);
-  doc.text('© 2026 by OperLog™', pageWidth - 14, pageHeight - 10, { align: 'right' });
 
-  return doc;
+  const html = `
+    <div style="font-family: Arial, sans-serif; padding: 40px; background: #1a1409; color: #f5e8c8">
+      <h1 style="text-align: center; color: #d4a44a; margin: 0 0 10px 0; font-size: 28px">Mi Célula</h1>
+      <p style="text-align: center; color: #8a8a8a; margin: 0 0 5px 0; font-size: 12px">Reporte Mensual — C.F.C.P.N.</p>
+      <h2 style="text-align: center; color: #d4a44a; margin: 0 0 30px 0; font-size: 20px">${nombreMes.toUpperCase()} ${año}</h2>
+
+      <table style="width: 100%; border-collapse: collapse; margin: 30px 0">
+        <tr style="background: #2a251a">
+          <td style="padding: 12px; border: 1px solid #d4a44a; color: #d4a44a; font-weight: bold">Indicador</td>
+          <td style="padding: 12px; border: 1px solid #d4a44a; color: #d4a44a; font-weight: bold; text-align: right">Cantidad</td>
+        </tr>
+        <tr style="background: #1e190f">
+          <td style="padding: 12px; border: 1px solid #d4a44a">Células activas</td>
+          <td style="padding: 12px; border: 1px solid #d4a44a; text-align: right">${celulas}</td>
+        </tr>
+        <tr style="background: #262011">
+          <td style="padding: 12px; border: 1px solid #d4a44a">Miembros activos</td>
+          <td style="padding: 12px; border: 1px solid #d4a44a; text-align: right">${miembros}</td>
+        </tr>
+        <tr style="background: #1e190f">
+          <td style="padding: 12px; border: 1px solid #d4a44a">Miembros nuevos</td>
+          <td style="padding: 12px; border: 1px solid #d4a44a; text-align: right">${nuevos}</td>
+        </tr>
+        <tr style="background: #262011">
+          <td style="padding: 12px; border: 1px solid #d4a44a">Ofrenda del mes</td>
+          <td style="padding: 12px; border: 1px solid #d4a44a; text-align: right">$${ofrenda.toLocaleString('es-AR')}</td>
+        </tr>
+      </table>
+
+      <p style="text-align: center; font-size: 11px; color: #8a8a8a; margin-top: 40px">
+        Generado: ${fechaGen}<br>
+        © 2026 by OperLog™
+      </p>
+    </div>
+  `;
+  return html;
 }
 
-function descargarPDF(doc, año, mes) {
-  doc.save(`reporte_${mes.toString().padStart(2, '0')}_${año}.pdf`);
+function descargarPDF(html, año, mes) {
+  const element = document.createElement('div');
+  element.innerHTML = html;
+  const opt = {
+    margin: 10,
+    filename: `reporte_${mes.toString().padStart(2, '0')}_${año}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+  };
+  html2pdf().set(opt).from(element).save();
 }
