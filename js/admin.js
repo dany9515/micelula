@@ -299,8 +299,6 @@ window.cerrarReportes = function() {
 window.descargarReporte = async function(mes, año) {
   showToast('⏳ Generando reporte...', false);
   try {
-    const inicioMes = new Date(año, mes, 1);
-    const inicioProxMes = new Date(año, mes + 1, 1);
     const celSnap = await getDocs(collection(db, 'celulas'));
     const totalCelulas = celSnap.size;
     const miemSnap = await getDocs(collection(db, 'miembros'));
@@ -322,8 +320,8 @@ window.descargarReporte = async function(mes, año) {
         if (ry === año && rm === (mes + 1)) ofrenda += r.ofrenda || 0;
       }
     });
-    const csv = generarCSV(año, mes, totalCelulas, totalMiembros, miembrosNuevos, ofrenda);
-    descargarCSV(csv, año, mes + 1);
+    const doc = generarPDF(año, mes, totalCelulas, totalMiembros, miembrosNuevos, ofrenda);
+    descargarPDF(doc, año, mes + 1);
     showToast('✔ Reporte descargado', false);
   } catch (e) {
     showToast('❌ Error al generar reporte', true);
@@ -331,27 +329,68 @@ window.descargarReporte = async function(mes, año) {
   }
 };
 
-function generarCSV(año, mes, celulas, miembros, nuevos, ofrenda) {
+function generarPDF(año, mes, celulas, miembros, nuevos, ofrenda) {
   const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long' }).format(new Date(año, mes, 1));
-  const lineas = [
-    'Reporte Mensual — Mi Célula',
-    '',
-    `Período,${nombreMes.toUpperCase()} ${año}`,
-    '',
-    'Indicador,Cantidad',
-    `Células activas,${celulas}`,
-    `Miembros activos,${miembros}`,
-    `Miembros nuevos,${nuevos}`,
-    `Ofrenda del mes,$${ofrenda.toLocaleString('es-AR')}`
-  ];
-  return lineas.join('\n');
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  doc.setFont('Cinzel', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(212, 164, 74);
+  doc.text('Mi Célula', pageWidth / 2, 20, { align: 'center' });
+
+  doc.setFont('Lora', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(140, 140, 140);
+  doc.text('Reporte Mensual — C.F.C.P.N.', pageWidth / 2, 28, { align: 'center' });
+
+  doc.setFontSize(11);
+  doc.setTextColor(212, 164, 74);
+  doc.setFont('Cinzel', 'normal');
+  doc.text(`${nombreMes.toUpperCase()} ${año}`, pageWidth / 2, 38, { align: 'center' });
+
+  doc.autoTable({
+    head: [['Indicador', 'Cantidad']],
+    body: [
+      ['Células activas', celulas.toString()],
+      ['Miembros activos', miembros.toString()],
+      ['Miembros nuevos', nuevos.toString()],
+      ['Ofrenda del mes', `$${ofrenda.toLocaleString('es-AR')}`]
+    ],
+    startY: 50,
+    styles: {
+      font: 'Lora',
+      fontSize: 11,
+      cellPadding: 8,
+      textColor: [245, 232, 200],
+      lineColor: [212, 164, 74],
+      lineWidth: 0.5
+    },
+    headStyles: {
+      fillColor: [42, 37, 25],
+      textColor: [212, 164, 74],
+      fontStyle: 'bold',
+      font: 'Cinzel'
+    },
+    bodyStyles: {
+      fillColor: [30, 25, 15]
+    },
+    alternateRowStyles: {
+      fillColor: [38, 32, 20]
+    }
+  });
+
+  const fechaGen = new Intl.DateTimeFormat('es-AR', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date());
+  doc.setFont('Lora', 'italic');
+  doc.setFontSize(8);
+  doc.setTextColor(140, 140, 140);
+  doc.text(`Generado: ${fechaGen}`, 14, pageHeight - 10);
+  doc.text('© 2026 by OperLog™', pageWidth - 14, pageHeight - 10, { align: 'right' });
+
+  return doc;
 }
 
-function descargarCSV(csv, año, mes) {
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', `reporte_${mes.toString().padStart(2, '0')}_${año}.csv`);
-  link.click();
+function descargarPDF(doc, año, mes) {
+  doc.save(`reporte_${mes.toString().padStart(2, '0')}_${año}.pdf`);
 }
