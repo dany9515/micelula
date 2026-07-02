@@ -269,27 +269,57 @@ window.guardarCelula = async function() {
   } catch (e) { showToast('❌ Error', true); console.error(e); }
 };
 
-window.abrirReportes = function() {
+window.abrirReportes = async function() {
   const modal = document.getElementById('modal-reportes');
   const lista = document.getElementById('reportes-lista');
   modal.classList.add('show');
+  lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">⏳ Buscando reportes...</div>';
+
   const meses = [];
   const hoy = new Date();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 12; i++) {
     const d = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
     meses.push(d);
   }
-  lista.innerHTML = meses.map(m => {
-    const mes = m.getMonth();
-    const año = m.getFullYear();
-    const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(m);
-    return `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(212,164,74,0.08);border:1px solid var(--border);border-radius:8px">
-        <span style="color:var(--text);font-family:var(--font-body);text-transform:capitalize">${nombreMes}</span>
-        <button class="btn-primary" onclick="descargarReporte(${mes}, ${año})" style="padding:6px 14px;font-size:0.85rem">📥 Descargar</button>
-      </div>
-    `;
-  }).join('');
+
+  try {
+    const reuSnap = await getDocs(collection(db, 'reuniones'));
+    const mesConDatos = new Set();
+
+    reuSnap.docs.forEach(d => {
+      const r = d.data();
+      if (r.fecha) {
+        const [ry, rm] = r.fecha.split('-').map(Number);
+        mesConDatos.add(`${ry}-${rm}`);
+      }
+    });
+
+    const mesesFiltrados = meses.filter(m => {
+      const año = m.getFullYear();
+      const mes = m.getMonth() + 1;
+      return mesConDatos.has(`${año}-${mes}`);
+    });
+
+    if (mesesFiltrados.length === 0) {
+      lista.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px">Sin reportes disponibles</div>';
+      return;
+    }
+
+    lista.innerHTML = mesesFiltrados.map(m => {
+      const mes = m.getMonth();
+      const año = m.getFullYear();
+      const nombreMes = new Intl.DateTimeFormat('es-AR', { month: 'long', year: 'numeric' }).format(m);
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:rgba(212,164,74,0.08);border:1px solid var(--border);border-radius:8px">
+          <span style="color:var(--text);font-family:var(--font-body);text-transform:capitalize">${nombreMes}</span>
+          <button class="btn-primary" onclick="descargarReporte(${mes}, ${año})" style="padding:6px 14px;font-size:0.85rem">📥 Descargar</button>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    lista.innerHTML = '<div style="color:red;padding:12px">❌ Error al cargar reportes</div>';
+    console.error(e);
+  }
 };
 
 window.cerrarReportes = function() {
