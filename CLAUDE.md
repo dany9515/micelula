@@ -682,3 +682,55 @@ Feature principal: panel admin puede descargar reportes mensuales con 4 indicado
 - ✅ Sistema de versiones triggerando banner automático
 - ✅ Service Worker robusto ante errores de red
 - ✅ Sin dependencias complejas
+
+---
+
+## Sesión 2026-09-10
+
+### Cambios realizados (sin commitear)
+
+**Nuevas herramientas de administración — reseteo de contraseñas**
+
+Problema: varios usuarios (70+) olvidaron sus contraseñas. Firebase Auth no permite el flujo estándar de reset por correo (los emails son ficticios), pero se necesitaba cambiar las contraseñas sin que perdieran sus datos (células, miembros, reuniones, etc).
+
+Solución: Crear un script Node.js con Firebase Admin SDK que cambie directamente la contraseña en Authentication.
+
+**Archivo nuevo creado:**
+- `scripts/resetear-password.js` — script que recibe email y contraseña temporal como argumentos:
+  ```bash
+  node scripts/resetear-password.js usuario@micelula.com contraseña_temporal
+  ```
+  - Conecta a Firebase Auth usando `serviceAccountKey.json`
+  - Busca el usuario por email
+  - Actualiza su contraseña
+  - Imprime confirmación en consola
+
+**Usuarios reseteados (en esta sesión):**
+1. `moni.lider@micelula.com` → contraseña: `iglesia2026`
+2. `fernanda.lider@micelula.com` → contraseña: `iglesia2026`
+3. `erika.lider@micelula.com` → contraseña: `iglesia2026`
+4. `mari.lider@micelula.com` → contraseña: `iglesia2026`
+
+**Garantías de seguridad:**
+- ✅ Solo se cambia la contraseña en Firebase Authentication (campo específico)
+- ✅ Firestore (datos de células, miembros, reuniones) no se toca
+- ✅ No afecta a otros usuarios
+- ✅ No requiere redeploy de la app en producción
+- ✅ Cambio es reversible (los usuarios siguen existiendo con todos sus datos intactos)
+
+**Flujo para el usuario:**
+1. Recibe email + contraseña temporal (ej: `iglesia2026`)
+2. Intenta entrar en `micelula.operlog.com.ar`
+3. Si `debecambiarpass = true` en Firestore → la app obliga cambio de contraseña en login
+4. Usuario elige su nueva contraseña
+5. Listo — todos sus datos conservados
+
+**Nota sobre `debecambiarpass`:**
+- Usuarios que ya habían entrado y cambiado su contraseña: `debecambiarpass = false`, no se fuerza cambio
+- Si se quiere forzar cambio después del reset, poner `debecambiarpass = true` en Firestore colección `usuarios`
+
+### Lecciones aprendidas
+
+- Firebase Admin SDK es la forma correcta de cambiar passwords programáticamente (más seguro que exponer la password temporalmente).
+- El script es reutilizable: cualquier tiempo que alguien olvide contraseña, ejecutar el script sin tocar la app.
+- No hay riesgo de romper la app para otros usuarios — cada reset es aislado.
