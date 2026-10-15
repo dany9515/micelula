@@ -69,11 +69,15 @@
   .app-header{background:var(--grad-header);border-bottom:2px solid var(--gold);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-medium);}
   .app-header-logo{display:flex;align-items:center;gap:8px;}
   .app-header-logo svg{width:32px;height:32px;}
+  /* Logo real de la iglesia (2026-10-15): la foto tiene fondo negro; "lighten" lo funde con el fondo oscuro de la app
+     y el brillo dorado va sin drop-shadow (que dibujaría un recuadro alrededor de la foto) */
+  .app-header-logo img{width:36px;height:36px;object-fit:contain;mix-blend-mode:lighten;}
+  img.login-logo-svg{object-fit:contain;mix-blend-mode:lighten;filter:none;width:150px;height:150px;}
   .app-header h1{font-family:var(--font-title);font-size:1.05rem;font-weight:700;letter-spacing:2px;color:var(--gold);text-transform:uppercase;}
   .header-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
   .header-user{font-family:var(--font-mono);font-size:0.75rem;color:var(--gold-light);}
   .header-user.admin{color:var(--gold-light);}
-  .header-user.admin::after{content:' ðŸ‘‘';}
+  .header-user.admin::after{content:' \1F451';} /* 👑 escrita como código: así no se rompe si el archivo cambia de codificación */
   .header-btns{display:flex;gap:6px;align-items:center;}
   .logout-btn{font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);background:none;border:1px solid var(--border);border-radius:4px;padding:3px 8px;cursor:pointer;transition:all 0.2s;}
   .logout-btn:hover{color:var(--red);border-color:var(--red);background:rgba(196,69,69,0.08);}
