@@ -15,6 +15,11 @@ service cloud.firestore {
       return request.auth.token.email;
     }
 
+    // La célula de un documento (para saber si es del líder que escribe)
+    function celulaDe(id) {
+      return get(/databases/$(database)/documents/celulas/$(id)).data;
+    }
+
     // Usuarios: cada uno lee/actualiza su propio doc; el admin lee y modifica todos.
     // Un líder no puede cambiar su propio rol.
     match /usuarios/{userId} {
@@ -51,8 +56,13 @@ service cloud.firestore {
         return get(/databases/$(database)/documents/celulas/$(resource.data.celulaId)).data.liderEmail;
       }
       allow read: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
-      allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
-      allow update: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
+      // 2026-10-15: solo en una célula propia (antes alcanzaba con poner tu correo: se podían cargar reuniones en células ajenas)
+      allow create: if isAuth() && (isAdmin() || (request.resource.data.liderEmail == myEmail()
+                       && celulaDe(request.resource.data.celulaId).liderEmail == myEmail()));
+      // Al corregir una reunión no se puede pasar a otra célula ni cambiar de líder
+      allow update: if isAuth() && (isAdmin() || (resource.data.liderEmail == myEmail()
+                       && request.resource.data.celulaId == resource.data.celulaId
+                       && request.resource.data.liderEmail == resource.data.liderEmail));
       allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
     }
 
@@ -60,6 +70,22 @@ service cloud.firestore {
     match /materiales/{materialId} {
       allow read: if isAuth();
       allow write: if isAdmin();
+    }
+
+    // Fotos para el carrusel: todos los líderes ven las de todas las células (pedido del usuario).
+    // 2026-10-15: cada uno publica solo fotos de SU célula y borra solo las suyas; nadie cambia la de otro.
+    // La foto tiene que ser un archivo de MiCélula (fotoUrl de Storage) o, si se pasa a guardarlas en la
+    // base como MiCatálogo, un JPEG chico (fotoData). Hoy Storage está apagado (facturación cerrada).
+    match /fotos/{fotoId} {
+      allow read: if isAuth();
+      allow create: if isAuth() && (isAdmin() || celulaDe(request.resource.data.celulaId).liderEmail == myEmail())
+                       && (!('fotoUrl' in request.resource.data)
+                           || request.resource.data.fotoUrl.matches('https://firebasestorage[.]googleapis[.]com/.*'))
+                       && (!('fotoData' in request.resource.data)
+                           || (request.resource.data.fotoData is string && request.resource.data.fotoData.size() < 400000
+                               && request.resource.data.fotoData.matches('data:image/jpeg;base64,[A-Za-z0-9+/=]+')));
+      allow update: if isAdmin();
+      allow delete: if isAuth() && (isAdmin() || celulaDe(resource.data.celulaId).liderEmail == myEmail());
     }
   }
 }
