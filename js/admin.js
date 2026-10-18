@@ -1,6 +1,6 @@
 import { db, collection, addDoc, deleteDoc, getDocs, doc, query, where, orderBy, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, confirmar, escHtml, num } from './ui.js';
+import { showToast, formatFecha, confirmar, escHtml, num, usuarioAEmail, usuarioCorto } from './ui.js';
 
 let _detalleCelulaId = null;
 let _detalleCelulaNombre = null;
@@ -80,7 +80,7 @@ function renderCelulasAdmin() {
         <div style="flex:1;min-width:200px">
           <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(c.nombre)}</div>
           <div class="item-info">👤 Líder: ${escHtml(c.liderNombre || c.liderEmail)}</div>
-          <div class="item-info">✉️ ${escHtml(c.liderEmail)}</div>
+          <div class="item-info">🔑 Usuario: ${escHtml(usuarioCorto(c.liderEmail))}</div>
           <div class="item-info">👥 ${_miemPorCel[c.id] || 0} miembros</div>
         </div>
         <button data-cel-id="${escHtml(c.id)}" data-cel-nombre="${escHtml(c.nombre)}" onclick="verDetalleCelula(this.dataset.celId, this.dataset.celNombre);" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
@@ -255,7 +255,7 @@ window.cargarMasReunionesMes = function() {
 
 window.guardarCelula = async function() {
   const nombre = document.getElementById('cel-nombre').value.trim();
-  const email = document.getElementById('cel-email').value.trim().toLowerCase();
+  const email = usuarioAEmail(document.getElementById('cel-email').value);
   const lider = document.getElementById('cel-lider').value.trim();
   if (!nombre || !email || !lider) { showToast('Faltan datos', true); return; }
   try {

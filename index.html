@@ -47,7 +47,7 @@
   <div class="login-sub">C.F.C.P.N.</div>
   <div class="login-card">
     <h2>Ingresar</h2>
-    <div class="login-field"><label>Usuario</label><input type="text" id="login-email" placeholder="tu@usuario.com" autocomplete="username"></div>
+    <div class="login-field"><label>Usuario</label><input type="text" id="login-email" placeholder="Ej: moni.lider" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
     <div class="login-field">
       <label>Contraseña</label>
       <div style="position:relative">
@@ -349,7 +349,7 @@
     <div class="modal-header"><h2>➕ Nueva Célula</h2><button class="modal-close" onclick="cerrarCelula()">✕</button></div>
     <div class="modal-body">
       <div class="field"><label>Nombre de la célula *</label><input type="text" id="cel-nombre" placeholder="Ej: Célula Las Águilas"></div>
-      <div class="field"><label>Email del líder *</label><input type="email" id="cel-email" placeholder="lider@micelula.com"></div>
+      <div class="field"><label>Usuario del líder *</label><input type="text" id="cel-email" placeholder="Ej: moni.lider" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
       <div class="field"><label>Nombre del líder *</label><input type="text" id="cel-lider" placeholder="Nombre y apellido"></div>
       <div style="font-family:var(--font-mono);font-size:0.78rem;color:var(--muted);background:rgba(212,164,74,0.08);padding:10px;border-radius:6px;margin-bottom:10px">⚠️ Después de crear acá, tenés que crear el usuario en Firebase Authentication con ese mismo email.</div>
       <button class="btn-primary" onclick="guardarCelula()">💾 Crear Célula</button>

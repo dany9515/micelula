@@ -1,6 +1,6 @@
 import { auth, db, signInWithEmailAndPassword, signOut, updatePassword, reauthenticateWithCredential, EmailAuthProvider, doc, updateDoc } from './firebase.js';
 import { state } from './state.js';
-import { showToast, confirmar } from './ui.js';
+import { showToast, confirmar, usuarioAEmail, DOMINIOS_VIEJOS } from './ui.js';
 
 export function initAuth(onAuthSuccess) {
   window._onAuthSuccess = onAuthSuccess;
@@ -21,15 +21,28 @@ window.togglePass = function(inputId, btnId) {
 };
 
 window.doLogin = async function() {
-  const email = document.getElementById('login-email').value.trim();
+  const usuario = document.getElementById('login-email').value.trim().toLowerCase();
   const pass = document.getElementById('login-pass').value;
   const btn = document.getElementById('login-btn');
   const errBox = document.getElementById('login-error-box');
   errBox.innerHTML = '';
   btn.disabled = true; btn.textContent = 'Ingresando...';
+  const [local, dom] = usuario.split('@');
+  const escribioElViejo = DOMINIOS_VIEJOS.includes(dom);
   try {
-    await signInWithEmailAndPassword(auth, email, pass);
+    try {
+      await signInWithEmailAndPassword(auth, usuarioAEmail(usuario), pass);
+    } catch (e) {
+      // Cuentas que todavía no se pasaron al dominio nuevo
+      const viejos = dom ? [usuario] : DOMINIOS_VIEJOS.map(d => local + '@' + d);
+      let entro = false;
+      for (const v of viejos) {
+        try { await signInWithEmailAndPassword(auth, v, pass); entro = true; break; } catch (_) {}
+      }
+      if (!entro) throw e;
+    }
     _loginPass = pass;
+    if (escribioElViejo) confirmar('Tu usuario cambió', `Desde ahora entrás escribiendo solo: ${local}`, 'Entendido');
   } catch (e) {
     errBox.innerHTML = '<div class="login-error" style="display:block">❌ Usuario o contraseña incorrectos.</div>';
     btn.disabled = false; btn.textContent = 'Entrar';

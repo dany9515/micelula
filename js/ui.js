@@ -4,6 +4,23 @@ export function escHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// Usuarios: el líder escribe solo "moni.lider"; Firebase necesita un correo, así que se completa acá.
+// 2026-10-18: antes era @micelula.com, un dominio ajeno que recibe correo (riesgo de "olvidé mi contraseña").
+// micelula.operlog.com.ar es nuestro y no recibe correo.
+export const DOMINIO_USUARIOS = 'micelula.operlog.com.ar';
+export const DOMINIOS_VIEJOS = ['micelula.com', 'miceula.com'];
+
+export function usuarioAEmail(usuario) {
+  const u = String(usuario ?? '').trim().toLowerCase();
+  const [local, dom] = u.split('@');
+  return (!dom || DOMINIOS_VIEJOS.includes(dom)) ? local + '@' + DOMINIO_USUARIOS : u;
+}
+
+export function usuarioCorto(email) {
+  const [local, dom] = String(email ?? '').split('@');
+  return (dom === DOMINIO_USUARIOS || DOMINIOS_VIEJOS.includes(dom)) ? local : String(email ?? '');
+}
+
 // Números que vienen de Firestore (ofrenda, asistentes): si no es un número, 0. Nunca texto al HTML.
 export function num(v) {
   const n = Number(v);
