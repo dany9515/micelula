@@ -1,8 +1,9 @@
 # Backups manuales (reemplazados por git)
 versions/
 
-# Claude Code
+# Claude Code (CLAUDE.md tiene notas privadas: el repo es público)
 .claude/
+CLAUDE.md
 
 # Firebase
 .firebase/
