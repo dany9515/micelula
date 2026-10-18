@@ -1,6 +1,6 @@
 import { db, collection, addDoc, updateDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, actualizarStats, escHtml, confirmar } from './ui.js';
+import { showToast, formatFecha, actualizarStats, escHtml, num, confirmar } from './ui.js';
 
 function parseOfrenda(val) {
   if (!val || !String(val).trim()) return 0;
@@ -38,15 +38,15 @@ export function renderHistorial() {
           ${r.lugar ? `<div class="item-info" style="margin-top:4px">📍 ${escHtml(r.lugar)}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <div class="cat-tag">${r.cantAsistentes || 0} asistentes</div>
-          <button class="btn-danger" data-reunion-id="${r.id}" onclick="editarReunion(this.dataset.reunionId)" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
-          <button class="btn-danger" data-reunion-id="${r.id}" onclick="eliminarReunion(this.dataset.reunionId)" style="padding:4px 10px">🗑️</button>
+          <div class="cat-tag">${num(r.cantAsistentes)} asistentes</div>
+          <button class="btn-danger" data-reunion-id="${escHtml(r.id)}" onclick="editarReunion(this.dataset.reunionId)" style="border-color:var(--gold);color:var(--gold);padding:4px 10px">✏️</button>
+          <button class="btn-danger" data-reunion-id="${escHtml(r.id)}" onclick="eliminarReunion(this.dataset.reunionId)" style="padding:4px 10px">🗑️</button>
         </div>
       </div>
       ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin-bottom:8px"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
-      ${r.ofrenda > 0 ? `<div class="item-info">💰 Ofrenda: $${r.ofrenda.toLocaleString('es-AR')}</div>` : ''}
+      ${num(r.ofrenda) > 0 ? `<div class="item-info">💰 Ofrenda: $${num(r.ofrenda).toLocaleString('es-AR')}</div>` : ''}
       ${r.visitas ? `<div class="item-info">👋 Visitas: ${escHtml(r.visitas)}</div>` : ''}
-      ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info" style="margin-top:6px">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
+      ${Array.isArray(r.asistentesNombres) && r.asistentesNombres.length ? `<div class="item-info" style="margin-top:6px">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
       ${r.obs ? `<div class="item-info" style="margin-top:8px;font-style:italic;background:rgba(30,58,95,0.15);padding:8px 10px;border-radius:6px">"${escHtml(r.obs)}"</div>` : ''}
     </div>
   `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasReuniones()" style="margin-top:4px">Ver ${restantes} reunión${restantes !== 1 ? 'es' : ''} anterior${restantes !== 1 ? 'es' : ''}</button>` : '');
@@ -111,7 +111,7 @@ window.editarReunion = function(id) {
     cont.innerHTML = '<div style="color:var(--muted);font-style:italic">Sin miembros en esta célula</div>';
   } else {
     cont.innerHTML = state.miembrosCache.map(m => `
-      <div class="check-row ${r.asistentesIds && r.asistentesIds.includes(m.id) ? 'checked' : ''}" data-id="${m.id}" onclick="this.classList.toggle('checked')">
+      <div class="check-row ${r.asistentesIds && r.asistentesIds.includes(m.id) ? 'checked' : ''}" data-id="${escHtml(m.id)}" onclick="this.classList.toggle('checked')">
         <div class="check-name">${escHtml(m.nombre)}</div>
         <div class="check-box">✓</div>
       </div>

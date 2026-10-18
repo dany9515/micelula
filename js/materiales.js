@@ -30,8 +30,8 @@ export function renderMateriales() {
       ${m.descripcion ? `<div class="material-desc">${escHtml(m.descripcion)}</div>` : ''}
       <div class="material-actions">
         <a href="${escHtml(m.url)}" target="_blank" rel="noopener" class="btn-download">📥 Descargar</a>
-        ${esAdmin ? `<button class="btn-edit" data-material-id="${m.id}" onclick="editarMaterial(this.dataset.materialId)">✏️</button>` : ''}
-        ${esAdmin ? `<button class="btn-delete" data-id="${m.id}" data-titulo="${escHtml(m.titulo)}" onclick="eliminarMaterialBtn(this)">🗑️</button>` : ''}
+        ${esAdmin ? `<button class="btn-edit" data-material-id="${escHtml(m.id)}" onclick="editarMaterial(this.dataset.materialId)">✏️</button>` : ''}
+        ${esAdmin ? `<button class="btn-delete" data-id="${escHtml(m.id)}" data-titulo="${escHtml(m.titulo)}" onclick="eliminarMaterialBtn(this)">🗑️</button>` : ''}
       </div>
     </div>
   `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="verMasMateriales()" style="margin-top:4px">Ver ${restantes} material${restantes !== 1 ? 'es' : ''} más</button>` : '');

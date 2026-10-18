@@ -1,6 +1,6 @@
 import { db, collection, addDoc, deleteDoc, getDocs, doc, query, where, orderBy, serverTimestamp } from './firebase.js';
 import { state } from './state.js';
-import { showToast, formatFecha, confirmar, escHtml } from './ui.js';
+import { showToast, formatFecha, confirmar, escHtml, num } from './ui.js';
 
 let _detalleCelulaId = null;
 let _detalleCelulaNombre = null;
@@ -39,7 +39,7 @@ export async function cargarPanelAdmin() {
       const f = new Date(fy, fm - 1, fd);
       if (f.getMonth() === mesActual && f.getFullYear() === yearActual) {
         reuMes++;
-        ofrMes += r.ofrenda || 0;
+        ofrMes += num(r.ofrenda);
         _reunionesMes.push({ id: d.id, ...r });
       }
     });
@@ -83,7 +83,7 @@ function renderCelulasAdmin() {
           <div class="item-info">✉️ ${escHtml(c.liderEmail)}</div>
           <div class="item-info">👥 ${_miemPorCel[c.id] || 0} miembros</div>
         </div>
-        <button data-cel-id="${c.id}" data-cel-nombre="${escHtml(c.nombre)}" onclick="verDetalleCelula(this.dataset.celId, this.dataset.celNombre);" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
+        <button data-cel-id="${escHtml(c.id)}" data-cel-nombre="${escHtml(c.nombre)}" onclick="verDetalleCelula(this.dataset.celId, this.dataset.celNombre);" style="background:rgba(212,164,74,0.1);border:1px solid var(--gold-dark);border-radius:8px;color:var(--gold-light);font-family:var(--font-title);font-size:0.8rem;padding:8px 14px;cursor:pointer;letter-spacing:1px;">👁 VER DETALLE</button>
       </div>
     </div>
   `).join('') + (restantes > 0 ? `<button class="btn-secondary" onclick="cargarMasCelulas()" style="margin-top:4px">Cargar más (${restantes} restante${restantes !== 1 ? 's' : ''})</button>` : '');
@@ -128,12 +128,12 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
         <div class="section-body">
           ${miembros.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin miembros registrados</div>' :
             miembros.map(m => `
-              <div data-miembro-id="${m.id}" style="padding:8px 0;border-bottom:0.5px solid var(--border);${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsAdmin(this.dataset.miembroId)">
+              <div data-miembro-id="${escHtml(m.id)}" style="padding:8px 0;border-bottom:0.5px solid var(--border);${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsAdmin(this.dataset.miembroId)">
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <span style="color:var(--text)">${escHtml(m.nombre)}</span>
                   ${m.telefono ? `<span style="color:var(--muted);font-size:0.85rem">📱 ${escHtml(m.telefono)}</span>` : ''}
                 </div>
-                ${m.obs ? `<div id="obs-admin-${m.id}" style="margin-top:6px;padding:6px 8px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.85rem">"${escHtml(m.obs)}"</div>` : ''}
+                ${m.obs ? `<div id="obs-admin-${escHtml(m.id)}" style="margin-top:6px;padding:6px 8px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.85rem">"${escHtml(m.obs)}"</div>` : ''}
               </div>`).join('')}
         </div>
       </div>
@@ -143,16 +143,16 @@ window.verDetalleCelula = async function(celulaId, nombreCelula) {
           ${reuniones.length === 0 ? '<div style="color:var(--muted);font-style:italic">Sin reuniones registradas</div>' :
             reuniones.slice(0, 3).map(r => `
               <div class="item-card" style="margin-bottom:10px;position:relative">
-                <button data-reunion-id="${r.id}" onclick="eliminarReunionAdmin(this.dataset.reunionId)" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
+                <button data-reunion-id="${escHtml(r.id)}" onclick="eliminarReunionAdmin(this.dataset.reunionId)" style="position:absolute;top:8px;right:8px;background:rgba(220,53,69,0.12);border:1px solid rgba(220,53,69,0.4);border-radius:6px;color:#e06c75;font-size:0.75rem;padding:3px 8px;cursor:pointer;">🗑</button>
                 <div style="font-family:var(--font-title);color:var(--gold-light);font-weight:700;margin-bottom:6px;padding-right:40px">
                   📅 ${formatFecha(r.fecha)} ${r.hora ? '— ' + escHtml(r.hora) + 'hs' : ''}
                 </div>
                 ${r.lugar ? `<div class="item-info">📍 ${escHtml(r.lugar)}</div>` : ''}
                 ${r.tema ? `<div style="background:rgba(212,164,74,0.08);padding:8px 10px;border-radius:6px;margin:6px 0"><strong style="color:var(--gold-light)">📖 Tema:</strong> ${escHtml(r.tema)}</div>` : ''}
-                <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes</div>
-                ${r.asistentesNombres && r.asistentesNombres.length ? `<div class="item-info">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
+                <div class="item-info">👥 ${num(r.cantAsistentes)} asistentes</div>
+                ${Array.isArray(r.asistentesNombres) && r.asistentesNombres.length ? `<div class="item-info">✓ ${r.asistentesNombres.map(escHtml).join(', ')}</div>` : ''}
                 ${r.visitas ? `<div class="item-info">👋 Visitas: ${escHtml(r.visitas)}</div>` : ''}
-                ${r.ofrenda > 0 ? `<div class="item-info">💰 Ofrenda: $${r.ofrenda.toLocaleString('es-AR')}</div>` : ''}
+                ${num(r.ofrenda) > 0 ? `<div class="item-info">💰 Ofrenda: $${num(r.ofrenda).toLocaleString('es-AR')}</div>` : ''}
                 ${r.obs ? `<div class="item-info" style="font-style:italic">"${escHtml(r.obs)}"</div>` : ''}
               </div>`).join('')}
         </div>
@@ -229,7 +229,7 @@ function renderReunionesMesAccordion() {
       <div class="item-info">👤 ${escHtml(_celulaLideres[r.celulaId] || r.liderEmail || '—')}</div>
       <div class="item-info">📅 ${formatFecha(r.fecha)}${r.hora ? ' — ' + escHtml(r.hora) + 'hs' : ''}</div>
       ${r.tema ? `<div class="item-info">📖 ${escHtml(r.tema)}</div>` : ''}
-      <div class="item-info">👥 ${r.cantAsistentes || 0} asistentes${r.ofrenda > 0 ? ' &nbsp;·&nbsp; 💰 $' + r.ofrenda.toLocaleString('es-AR') : ''}</div>
+      <div class="item-info">👥 ${num(r.cantAsistentes)} asistentes${num(r.ofrenda) > 0 ? ' &nbsp;·&nbsp; 💰 $' + num(r.ofrenda).toLocaleString('es-AR') : ''}</div>
     </div>`).join('')
     + (restantes > 0 ? `<button class="btn-secondary" onclick="cargarMasReunionesMes()" style="margin-top:4px">Cargar más (${restantes} restante${restantes !== 1 ? 's' : ''})</button>` : '');
 }
@@ -347,7 +347,7 @@ window.descargarReporte = async function(mes, año) {
       const r = d.data();
       if (r.fecha) {
         const [ry, rm, rd] = r.fecha.split('-').map(Number);
-        if (ry === año && rm === (mes + 1)) ofrenda += r.ofrenda || 0;
+        if (ry === año && rm === (mes + 1)) ofrenda += num(r.ofrenda);
       }
     });
     const doc = generarPDF(año, mes, totalCelulas, totalMiembros, miembrosNuevos, ofrenda);

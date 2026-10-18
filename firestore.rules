@@ -20,6 +20,34 @@ service cloud.firestore {
       return get(/databases/$(database)/documents/celulas/$(id)).data;
     }
 
+    // 2026-10-18 (revisión de Sereno): IDs automáticos de Firestore (addDoc) y tipos de datos controlados,
+    // para que nadie guarde HTML o código en campos que el panel muestra.
+    function idValido(id) {
+      return id.matches('[A-Za-z0-9]{20}');
+    }
+    function fechaOk(d, campo) {
+      return !(campo in d) || d[campo] == null
+        || (d[campo] is string && d[campo].matches('([0-9]{4}-[0-9]{2}-[0-9]{2})?'));
+    }
+    function textoOk(d, campo) {
+      return !(campo in d) || d[campo] is string;
+    }
+    function miembroOk(d) {
+      return d.nombre is string && d.celulaId is string
+        && textoOk(d, 'telefono') && textoOk(d, 'obs') && fechaOk(d, 'ingreso')
+        && (!('edad' in d) || d.edad == null || d.edad is int
+            || (d.edad is string && d.edad.matches('[0-9]{0,3}')));
+    }
+    function reunionOk(d) {
+      return d.celulaId is string && fechaOk(d, 'fecha')
+        && (!('hora' in d) || (d.hora is string && d.hora.matches('([0-9]{2}:[0-9]{2}(:[0-9]{2})?)?')))
+        && (!('ofrenda' in d) || d.ofrenda is number)
+        && (!('cantAsistentes' in d) || d.cantAsistentes is int)
+        && (!('asistentesIds' in d) || d.asistentesIds is list)
+        && (!('asistentesNombres' in d) || d.asistentesNombres is list)
+        && textoOk(d, 'lugar') && textoOk(d, 'tema') && textoOk(d, 'visitas') && textoOk(d, 'obs');
+    }
+
     // Usuarios: cada uno lee/actualiza su propio doc; el admin lee y modifica todos.
     // Un líder no puede cambiar su propio rol.
     match /usuarios/{userId} {
@@ -33,7 +61,7 @@ service cloud.firestore {
     // Células: el admin ve todas; los líderes solo ven las suyas.
     match /celulas/{celulaId} {
       allow read: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
-      allow create: if isAuth() && (isAdmin() || request.resource.data.liderEmail == myEmail());
+      allow create: if isAuth() && idValido(celulaId) && (isAdmin() || request.resource.data.liderEmail == myEmail());
       allow update: if isAdmin();
       allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
     }
@@ -46,8 +74,12 @@ service cloud.firestore {
       function nuevaCelulaLiderEmail() {
         return get(/databases/$(database)/documents/celulas/$(request.resource.data.celulaId)).data.liderEmail;
       }
-      allow read, update, delete: if isAuth() && (isAdmin() || celulaLiderEmail() == myEmail());
-      allow create: if isAuth() && (isAdmin() || nuevaCelulaLiderEmail() == myEmail());
+      allow read, delete: if isAuth() && (isAdmin() || celulaLiderEmail() == myEmail());
+      // 2026-10-18: al editar, la célula nueva también tiene que ser tuya (antes se podía pasar un miembro a otro líder)
+      allow update: if isAuth() && (isAdmin() || (celulaLiderEmail() == myEmail()
+                       && nuevaCelulaLiderEmail() == myEmail() && miembroOk(request.resource.data)));
+      allow create: if isAuth() && idValido(miembroId) && (isAdmin()
+                       || (nuevaCelulaLiderEmail() == myEmail() && miembroOk(request.resource.data)));
     }
 
     // Reuniones: cada líder accede a las de su célula (vía get); solo el admin puede editar; líder puede borrar las suyas.
@@ -57,12 +89,14 @@ service cloud.firestore {
       }
       allow read: if isAuth() && (isAdmin() || reunionCelulaLiderEmail() == myEmail());
       // 2026-10-15: solo en una célula propia (antes alcanzaba con poner tu correo: se podían cargar reuniones en células ajenas)
-      allow create: if isAuth() && (isAdmin() || (request.resource.data.liderEmail == myEmail()
-                       && celulaDe(request.resource.data.celulaId).liderEmail == myEmail()));
+      allow create: if isAuth() && idValido(reunionId) && (isAdmin() || (request.resource.data.liderEmail == myEmail()
+                       && celulaDe(request.resource.data.celulaId).liderEmail == myEmail()
+                       && reunionOk(request.resource.data)));
       // Al corregir una reunión no se puede pasar a otra célula ni cambiar de líder
       allow update: if isAuth() && (isAdmin() || (resource.data.liderEmail == myEmail()
                        && request.resource.data.celulaId == resource.data.celulaId
-                       && request.resource.data.liderEmail == resource.data.liderEmail));
+                       && request.resource.data.liderEmail == resource.data.liderEmail
+                       && reunionOk(request.resource.data)));
       allow delete: if isAuth() && (isAdmin() || resource.data.liderEmail == myEmail());
     }
 

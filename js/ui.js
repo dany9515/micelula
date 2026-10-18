@@ -4,6 +4,12 @@ export function escHtml(s) {
   return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// Números que vienen de Firestore (ofrenda, asistentes): si no es un número, 0. Nunca texto al HTML.
+export function num(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+}
+
 let _confirmResolve = null;
 
 export function confirmar(titulo, mensaje, btnTexto = '✔ Confirmar', isDanger = false) {
@@ -33,7 +39,7 @@ export function showToast(msg, isError = false) {
 export function formatFecha(f) {
   if (!f) return '—';
   const parts = String(f).split('T')[0].split('-');
-  if (parts.length === 3) return parts[2] + '/' + parts[1] + '/' + parts[0];
+  if (parts.length === 3) return escHtml(parts[2] + '/' + parts[1] + '/' + parts[0]);
   const d = new Date(f);
   return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
 }

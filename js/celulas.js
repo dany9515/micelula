@@ -29,7 +29,7 @@ export function actualizarSelectorCelulas() {
   if (state.misCelulas.length === 0) { selector.style.display = 'none'; return; }
   selector.style.display = 'block';
   const sel = document.getElementById('selector-celula');
-  sel.innerHTML = state.misCelulas.map(c => `<option value="${c.id}">${escHtml(c.nombre)}</option>`).join('');
+  sel.innerHTML = state.misCelulas.map(c => `<option value="${escHtml(c.id)}">${escHtml(c.nombre)}</option>`).join('');
   sel.value = state.miCelulaId;
   sel.style.display = 'block';
 }

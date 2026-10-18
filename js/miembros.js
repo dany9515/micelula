@@ -22,20 +22,20 @@ export function renderMiembros() {
     return;
   }
   cont.innerHTML = state.miembrosCache.map(m => `
-    <div class="item-card" data-miembro-id="${m.id}" style="${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsMiembro(this.dataset.miembroId)">
+    <div class="item-card" data-miembro-id="${escHtml(m.id)}" style="${m.obs ? 'cursor:pointer' : ''}" onclick="toggleObsMiembro(this.dataset.miembroId)">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
         <div style="flex:1;min-width:180px">
           <div style="font-family:var(--font-title);font-size:1rem;color:var(--gold-light);font-weight:700;margin-bottom:4px">${escHtml(m.nombre)}</div>
           ${m.telefono ? `<div class="item-info">📱 ${escHtml(m.telefono)}</div>` : ''}
-          ${m.edad ? `<div class="item-info">🎂 ${m.edad} años</div>` : ''}
+          ${m.edad ? `<div class="item-info">🎂 ${escHtml(m.edad)} años</div>` : ''}
           ${m.ingreso ? `<div class="item-info">📅 Ingreso: ${formatFecha(m.ingreso)}</div>` : ''}
         </div>
         <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-          <button class="btn-danger" data-miembro-id="${m.id}" onclick="editarMiembro(this.dataset.miembroId)" style="border-color:var(--gold);color:var(--gold)">✏️</button>
-          <button class="btn-danger" data-id="${m.id}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
+          <button class="btn-danger" data-miembro-id="${escHtml(m.id)}" onclick="editarMiembro(this.dataset.miembroId)" style="border-color:var(--gold);color:var(--gold)">✏️</button>
+          <button class="btn-danger" data-id="${escHtml(m.id)}" data-nombre="${escHtml(m.nombre)}" onclick="eliminarMiembroBtn(this)">🗑️</button>
         </div>
       </div>
-      ${m.obs ? `<div id="obs-miem-${m.id}" style="margin-top:8px;padding:8px 10px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.9rem">"${escHtml(m.obs)}"</div>` : ''}
+      ${m.obs ? `<div id="obs-miem-${escHtml(m.id)}" style="margin-top:8px;padding:8px 10px;background:rgba(212,164,74,0.07);border-radius:6px;font-style:italic;color:var(--text);font-size:0.9rem">"${escHtml(m.obs)}"</div>` : ''}
     </div>
   `).join('');
 }
@@ -47,7 +47,7 @@ export function renderAsistentes() {
     return;
   }
   cont.innerHTML = state.miembrosCache.map(m => `
-    <div class="check-row" data-id="${m.id}" onclick="this.classList.toggle('checked')">
+    <div class="check-row" data-id="${escHtml(m.id)}" onclick="this.classList.toggle('checked')">
       <div class="check-name">${escHtml(m.nombre)}</div>
       <div class="check-box">✓</div>
     </div>
