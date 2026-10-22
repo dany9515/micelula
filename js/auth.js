@@ -26,28 +26,31 @@ window.doLogin = async function() {
   const btn = document.getElementById('login-btn');
   const errBox = document.getElementById('login-error-box');
   errBox.innerHTML = '';
+  if (!usuario || !pass) {
+    errBox.innerHTML = '<div class="login-error" style="display:block">✍️ Escribí tu usuario y tu contraseña.</div>';
+    return;
+  }
   btn.disabled = true; btn.textContent = 'Ingresando...';
   const [local, dom] = usuario.split('@');
   const escribioElViejo = DOMINIOS_VIEJOS.includes(dom);
   try {
-    try {
-      await signInWithEmailAndPassword(auth, usuarioAEmail(usuario), pass);
-    } catch (e) {
-      // Cuentas que todavía no se pasaron al dominio nuevo
-      const viejos = dom ? [usuario] : DOMINIOS_VIEJOS.map(d => local + '@' + d);
-      let entro = false;
-      for (const v of viejos) {
-        try { await signInWithEmailAndPassword(auth, v, pass); entro = true; break; } catch (_) {}
-      }
-      if (!entro) throw e;
-    }
+    // Un solo intento por toque: desde el 18/10 todas las cuentas están en el dominio nuevo
+    await signInWithEmailAndPassword(auth, usuarioAEmail(usuario), pass);
     _loginPass = pass;
     if (escribioElViejo) confirmar('Tu usuario cambió', `Desde ahora entrás escribiendo solo: ${local}`, 'Entendido');
   } catch (e) {
-    errBox.innerHTML = '<div class="login-error" style="display:block">❌ Usuario o contraseña incorrectos.</div>';
+    errBox.innerHTML = `<div class="login-error" style="display:block">${mensajeErrorLogin(e.code)}</div>`;
     btn.disabled = false; btn.textContent = 'Entrar';
   }
 };
+
+// Firebase bloquea un rato después de muchos intentos fallidos: si no se avisa, parece que la contraseña está mal aunque esté bien
+function mensajeErrorLogin(code) {
+  if (code === 'auth/too-many-requests') return '⏳ Probaste muchas veces. Esperá unos minutos y volvé a intentar.';
+  if (code === 'auth/network-request-failed') return '📶 No hay conexión a internet. Revisá los datos o el Wi-Fi y probá de nuevo.';
+  if (code === 'auth/user-disabled') return '🔒 Esta cuenta está pausada. Avisale a tu líder.';
+  return '❌ Usuario o contraseña incorrectos.';
+}
 
 window.doLogout = async function() {
   if (await confirmar('Cerrar sesión', '¿Estás seguro que querés cerrar sesión?', 'Salir')) {
