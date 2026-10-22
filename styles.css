@@ -168,6 +168,12 @@
   .modal-close{background:none;border:none;color:var(--muted);font-size:1.6rem;cursor:pointer;}
   .modal-body{padding:16px;max-height:75vh;overflow-y:auto;}
 
+  /* RESETEAR CONTRASEÑA (panel admin, solo dani.admin) */
+  .reset-ok{margin-top:16px;padding:16px;border:1px solid var(--gold);border-radius:12px;background:rgba(240,192,0,0.06);text-align:center;}
+  .reset-ok-lbl{font-family:var(--font-mono);font-size:0.78rem;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase;}
+  .reset-ok-pass{font-family:var(--font-mono);font-size:1.6rem;color:var(--gold-light);letter-spacing:2px;margin:8px 0 4px;user-select:all;overflow-wrap:anywhere;}
+  a.reset-wa{display:block;text-align:center;text-decoration:none;}
+
   /* LOADING */
   .loading-overlay{position:fixed;inset:0;background:rgba(13,10,5,0.95);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
   .loading-overlay.hidden{display:none;}

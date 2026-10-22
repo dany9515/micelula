@@ -9,3 +9,8 @@ CLAUDE.md
 .firebase/
 serviceAccountKey.json
 scripts/node_modules/
+
+# Worker de Cloudflare (worker/): caché de wrangler y secretos para probar en la compu
+.wrangler/
+.dev.vars*
+node_modules/

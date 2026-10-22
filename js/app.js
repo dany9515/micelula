@@ -7,6 +7,7 @@ import { suscribirMiembros, renderMiembros, renderAsistentes } from './miembros.
 import { suscribirReuniones, renderHistorial } from './reuniones.js';
 import { suscribirMateriales, renderMateriales } from './materiales.js';
 import { cargarPanelAdmin } from './admin.js';
+import { mostrarResetPass } from './reset-pass.js';
 
 // Exponer mostrarApp globalmente para que auth.js pueda llamarla
 window.mostrarApp = mostrarApp;
@@ -58,6 +59,7 @@ async function mostrarApp() {
     document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
     cargarPanelAdmin();
   }
+  mostrarResetPass();
   await cargarMiCelula();
   suscribirMiembros();
   suscribirReuniones();

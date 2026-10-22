@@ -269,6 +269,18 @@
           <button class="btn-primary" onclick="abrirReportes()" style="width:100%">📊 Descargar Reporte Mensual</button>
         </div>
       </div>
+      <div class="section" id="seccion-reset-pass" style="display:none">
+        <div class="section-header"><h3>🔑 Resetear Contraseña</h3></div>
+        <div class="section-body">
+          <div class="field">
+            <label for="reset-usuario">Usuario</label>
+            <input type="text" id="reset-usuario" autocomplete="off" autocapitalize="none" spellcheck="false">
+          </div>
+          <button class="btn-primary" id="reset-btn" onclick="resetearPassword()">🔑 Resetear</button>
+          <div class="login-error" id="reset-error"></div>
+          <div id="reset-resultado"></div>
+        </div>
+      </div>
       <div class="section">
         <div class="section-header"><h3>📍 Todas las Células</h3></div>
         <div class="section-body">
@@ -290,7 +302,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <!-- MODALES -->
 <div class="modal-overlay" id="modal-pass">
@@ -302,6 +314,20 @@
       <div class="login-field"><label>Repetir contraseña</label><input type="password" id="pass-repetir" placeholder="••••••••"></div>
       <button class="login-btn" onclick="cambiarPassword()">Cambiar</button>
       <div class="login-error" id="pass-error"></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-reset-confirmar">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header"><h2>🔐 Confirmá que sos vos</h2><button class="modal-close" onclick="cerrarConfirmarReset()">✕</button></div>
+    <div class="modal-body">
+      <p style="font-family:var(--font-body);color:var(--text);line-height:1.6;margin-bottom:16px">Escribí tu contraseña para resetear la de <strong id="reset-confirmar-usuario"></strong>.</p>
+      <input type="text" id="reset-mi-usuario" autocomplete="username" readonly hidden>
+      <div class="login-field"><label for="reset-mi-pass">Tu contraseña</label><input type="password" id="reset-mi-pass" placeholder="••••••••" autocomplete="current-password"></div>
+      <button class="btn-primary" id="reset-confirmar-btn" onclick="confirmarReset()">Confirmar y resetear</button>
+      <button class="btn-secondary" onclick="cerrarConfirmarReset()">Cancelar</button>
+      <div class="login-error" id="reset-confirmar-error"></div>
     </div>
   </div>
 </div>

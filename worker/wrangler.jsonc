@@ -1,0 +1,26 @@
+{
+  // MiCélula: servidor del botón "Resetear contraseña" del panel de dani.admin (ver src/index.js).
+  // No sirve la app (esa sigue en GitHub Pages): solo responde a POST /resetear desde micelula.operlog.com.ar.
+  "name": "micelula-admin",
+  "main": "src/index.js",
+  "compatibility_date": "2025-09-01",
+
+  // Queda en micelula-admin.dany1234491.workers.dev. Sereno avisó que esa dirección muestra el usuario de Gmail;
+  // se probó micelula-api.operlog.com.ar pero el DNS no la publicó, y Daniel decidió dejar esta (22/10/2026).
+  "workers_dev": true,
+  "preview_urls": false,
+  // Registro de cada reseteo (usuario y hora, nunca la contraseña): Cloudflare → Workers → micelula-admin → Logs.
+  "observability": { "enabled": true },
+
+  "vars": {
+    // Cuenta de servicio de Google con un rol propio ("MiCélula - resetear contraseñas") que solo puede buscar usuarios
+    // y cambiarles la contraseña. El correo no es secreto; la llave sí.
+    "SA_EMAIL": "micelula-reset-claves@micelula-cfcpn.iam.gserviceaccount.com",
+    // dani.admin en Firebase: la única cuenta que puede resetear.
+    "ADMIN_UID": "3fpTBR8IADhi0Iqmn5OJPhVRl2M2",
+    // Copia de prueba de la app en la compu: "http://localhost:5500" solo mientras se prueba; vacío en producción.
+    "ORIGEN_PRUEBA": ""
+  }
+  // Secreto (NUNCA acá): SA_KEY, la llave privada de micelula-reset-claves. Se carga con `wrangler secret bulk`
+  // directo desde Google, sin archivo. Si hay que cambiarla: crear una llave nueva y borrar la vieja en Google Cloud.
+}
